@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sendTicketEmail } from '@/lib/sendEmail';
-import { generateTicketPDF } from '@/lib/generateTicketPDF';
+import { generateTicketPDF } from '@/components/generateTicketPDF';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
