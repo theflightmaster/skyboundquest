@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Plane, MapPin, Calendar, Clock, ArrowRight, X, Menu } from 'lucide-react';
@@ -7,7 +8,7 @@ import Footer from '@/components/Footer';
 import FlightTrackingForm from '@/components/FlightTrackingForm';
 import FlightTrackingCard from '@/components/FlightTrackingCard';
 
-export default function TrackFlightPage() {
+function TrackFlightContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -277,5 +278,23 @@ export default function TrackFlightPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function TrackFlightPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="relative">
+          <div className="w-24 h-24 border-4 border-indigo-200 rounded-full animate-pulse"></div>
+          <div className="absolute top-0 left-0 w-24 h-24 border-4 border-t-indigo-600 border-r-purple-500 border-b-indigo-500 border-l-transparent rounded-full animate-spin"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <Plane size={32} className="text-indigo-600 animate-bounce" />
+          </div>
+        </div>
+      </div>
+    }>
+      <TrackFlightContent />
+    </Suspense>
   );
 }
