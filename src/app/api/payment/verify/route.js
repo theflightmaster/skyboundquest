@@ -3,7 +3,7 @@ import { sendTicketEmail } from '@/lib/sendEmail';
 import { generateTicketPDF } from '@/components/generateTicketPDF';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
-const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 export async function GET(request) {
   try {

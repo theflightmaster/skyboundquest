@@ -3,7 +3,7 @@ import TicketEmail from '@/components/TicketEmail';
 import { generateTicketPDF } from '@/components/generateTicketPDF';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 export async function sendTicketEmail({
   to,
