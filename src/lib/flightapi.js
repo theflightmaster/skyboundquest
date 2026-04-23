@@ -1,5 +1,5 @@
 const BASE_URL = 'https://api.flightapi.io';
-const API_KEY = process.env.FLIGHTAPI_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_FLIGHTAPI_KEY;
 
 // All available cabin classes
 const CABIN_CLASSES = ['Economy', 'Premium_Economy', 'Business', 'First'];

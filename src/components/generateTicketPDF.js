@@ -7,217 +7,332 @@ export async function generateTicketPDF(bookingData) {
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   const { width, height } = page.getSize();
+  let yPosition = height - 40;
   
-  // Header Background
-  page.drawRectangle({
-    x: 0,
-    y: height - 120,
-    width: width,
-    height: 120,
-    color: rgb(0.2, 0.3, 0.5),
-  });
-
-  // Title
-  page.drawText('SKYBOUNDQUEST', {
-    x: 50,
-    y: height - 50,
-    size: 24,
-    font: fontBold,
-    color: rgb(1, 1, 1),
-  });
-
-  page.drawText('FLIGHT TICKET', {
-    x: 50,
-    y: height - 80,
-    size: 14,
-    font: font,
-    color: rgb(0.9, 0.9, 0.9),
-  });
+  // Try to load and embed the logo image using fetch
+  let logoImage = null;
+  try {
+    // Get the base URL from environment or use a default
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const response = await fetch(`${baseUrl}/logo.png`);
+    const logoBuffer = await response.arrayBuffer();
+    logoImage = await pdfDoc.embedPng(logoBuffer);
+  } catch (error) {
+    console.error('Could not load logo.png:', error.message); 
+    // Continue without logo
+  }
+  
+  // Draw Logo if available
+  if (logoImage) {
+    const logoWidth = 70;
+    const logoHeight = 70;
+    page.drawImage(logoImage, {
+      x: 50,
+      y: height - 95,
+      width: logoWidth,
+      height: logoHeight,
+    });
+    
+  } else {
+    // If no logo, just draw the text
+    page.drawText('SKYBOUNDQUEST', {
+      x: 50,
+      y: height - 50,
+      size: 24,
+      font: fontBold,
+      color: rgb(0, 0, 0),
+    });
+  }
 
   // Booking Reference
   page.drawText('BOOKING REFERENCE', {
     x: 50,
-    y: height - 160,
+    y: yPosition,
     size: 10,
     font: font,
     color: rgb(0.5, 0.5, 0.5),
   });
   page.drawText(bookingData.reference, {
     x: 50,
-    y: height - 180,
-    size: 16,
+    y: yPosition - 20,
+    size: 12,
     font: fontBold,
     color: rgb(0, 0, 0),
   });
 
-  // Amount
-  page.drawText('TOTAL AMOUNT', {
-    x: 400,
-    y: height - 160,
-    size: 10,
-    font: font,
-    color: rgb(0.5, 0.5, 0.5),
-  });
-  page.drawText(`$${bookingData.amount}`, {
-    x: 400,
-    y: height - 180,
-    size: 16,
-    font: fontBold,
-    color: rgb(0, 0.5, 0.2),
-  });
+  yPosition -= 50;
 
   // Divider
   page.drawLine({
-    start: { x: 50, y: height - 210 },
-    end: { x: width - 50, y: height - 210 },
+    start: { x: 50, y: yPosition },
+    end: { x: width - 50, y: yPosition },
     thickness: 1,
     color: rgb(0.8, 0.8, 0.8),
   });
 
-  // Flight Details
+  yPosition -= 30;
+
+  // FLIGHT DETAILS Section
   page.drawText('FLIGHT DETAILS', {
     x: 50,
-    y: height - 240,
+    y: yPosition,
     size: 14,
     font: fontBold,
     color: rgb(0, 0, 0),
   });
 
+  yPosition -= 30;
+
+  // Airline
   page.drawText('Airline:', {
     x: 50,
-    y: height - 270,
+    y: yPosition,
     size: 10,
     font: font,
     color: rgb(0.5, 0.5, 0.5),
   });
   page.drawText(bookingData.airline, {
     x: 150,
-    y: height - 270,
+    y: yPosition,
     size: 12,
     font: fontBold,
     color: rgb(0, 0, 0),
   });
 
+  yPosition -= 20;
+
+  // Flight Number
   page.drawText('Flight Number:', {
     x: 50,
-    y: height - 290,
+    y: yPosition,
     size: 10,
     font: font,
     color: rgb(0.5, 0.5, 0.5),
   });
   page.drawText(bookingData.flightNumber, {
     x: 150,
-    y: height - 290,
+    y: yPosition,
     size: 12,
     font: fontBold,
     color: rgb(0, 0, 0),
   });
 
-  // Route
-  page.drawText('DEPARTURE', {
-    x: 50,
-    y: height - 330,
-    size: 10,
-    font: font,
-    color: rgb(0.5, 0.5, 0.5),
-  });
-  page.drawText(bookingData.departureAirport, {
-    x: 50,
-    y: height - 350,
-    size: 20,
-    font: fontBold,
-    color: rgb(0, 0, 0),
-  });
-  page.drawText(bookingData.departureTime, {
-    x: 50,
-    y: height - 375,
-    size: 12,
-    font: font,
-    color: rgb(0.3, 0.3, 0.3),
-  });
+  yPosition -= 20;
 
-  page.drawText('→', {
-    x: 250,
-    y: height - 350,
-    size: 20,
-    font: fontBold,
-    color: rgb(0.5, 0.5, 0.5),
-  });
-
-  page.drawText('ARRIVAL', {
-    x: 350,
-    y: height - 330,
-    size: 10,
-    font: font,
-    color: rgb(0.5, 0.5, 0.5),
-  });
-  page.drawText(bookingData.arrivalAirport, {
-    x: 350,
-    y: height - 350,
-    size: 20,
-    font: fontBold,
-    color: rgb(0, 0, 0),
-  });
-  page.drawText(bookingData.arrivalTime, {
-    x: 350,
-    y: height - 375,
-    size: 12,
-    font: font,
-    color: rgb(0.3, 0.3, 0.3),
-  });
-
-  // Duration
-  page.drawText('Duration:', {
+  // Passenger Name
+  page.drawText('Passenger:', {
     x: 50,
-    y: height - 410,
-    size: 10,
-    font: font,
-    color: rgb(0.5, 0.5, 0.5),
-  });
-  page.drawText(bookingData.duration, {
-    x: 120,
-    y: height - 410,
-    size: 12,
-    font: fontBold,
-    color: rgb(0, 0, 0),
-  });
-
-  // Passenger Details
-  page.drawText('PASSENGER DETAILS', {
-    x: 50,
-    y: height - 460,
-    size: 14,
-    font: fontBold,
-    color: rgb(0, 0, 0),
-  });
-
-  page.drawText('Name:', {
-    x: 50,
-    y: height - 490,
+    y: yPosition,
     size: 10,
     font: font,
     color: rgb(0.5, 0.5, 0.5),
   });
   page.drawText(bookingData.passengerName, {
-    x: 120,
-    y: height - 490,
+    x: 150,
+    y: yPosition,
     size: 12,
     font: fontBold,
     color: rgb(0, 0, 0),
   });
 
-  // Footer
-  const pageCount = pdfDoc.getPageCount();
-  for (let i = 0; i < pageCount; i++) {
-    const currentPage = pdfDoc.getPage(i);
-    currentPage.drawText('Thank you for choosing Skyboundquest!', {
+  yPosition -= 40;
+
+  // Departure Section
+  page.drawText('DEPARTURE', {
+    x: 50,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0.2, 0.3, 0.5),
+  });
+
+  yPosition -= 20;
+
+  page.drawText('Airport:', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText(bookingData.departureAirport, {
+    x: 120,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 18;
+
+  page.drawText('Date:', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText(bookingData.departureDate, {
+    x: 120,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 18;
+
+  page.drawText('Time:', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText(bookingData.departureTime, {
+    x: 120,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 40;
+
+  // Flight Path Arrow - ASCII character to avoid encoding issues
+  page.drawText('▼', {
+    x: 80,
+    y: yPosition,
+    size: 16,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  yPosition -= 30;
+
+  // Arrival Section
+  page.drawText('ARRIVAL', {
+    x: 50,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0.2, 0.5, 0.2),
+  });
+
+  yPosition -= 20;
+
+  page.drawText('Airport:', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText(bookingData.arrivalAirport, {
+    x: 120,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 18;
+
+  page.drawText('Time:', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText(bookingData.arrivalTime, {
+    x: 120,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 40;
+
+  // Duration
+  page.drawText('FLIGHT DURATION', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+  page.drawText(bookingData.duration, {
+    x: 50,
+    y: yPosition - 18,
+    size: 14,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 60;
+
+  // Divider
+  page.drawLine({
+    start: { x: 50, y: yPosition },
+    end: { x: width - 50, y: yPosition },
+    thickness: 1,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  yPosition -= 30;
+
+  // Important Information
+  page.drawText('IMPORTANT INFORMATION', {
+    x: 50,
+    y: yPosition,
+    size: 12,
+    font: fontBold,
+    color: rgb(0, 0, 0),
+  });
+
+  yPosition -= 20;
+
+  const importantInfo = [
+    '• Please arrive at the airport at least 2 hours before departure',
+    '• Valid government-issued ID is required for check-in',
+    '• Check-in closes 45 minutes before departure',
+    '• Carry-on baggage: 1 x 7kg',
+    '• Checked baggage: 1 x 23kg',
+  ];
+
+  importantInfo.forEach((line) => {
+    page.drawText(line, {
       x: 50,
-      y: 50,
-      size: 10,
+      y: yPosition,
+      size: 9,
       font: font,
-      color: rgb(0.5, 0.5, 0.5),
+      color: rgb(0.3, 0.3, 0.3),
     });
-  }
+    yPosition -= 15;
+  });
+
+  yPosition -= 20;
+
+  // Footer
+  page.drawText('Thank you for choosing Skyboundquest!', {
+    x: 50,
+    y: yPosition,
+    size: 10,
+    font: font,
+    color: rgb(0.5, 0.5, 0.5),
+  });
+
+  yPosition -= 15;
+
+  page.drawText('For assistance, contact us at support@skyboundquest.com', {
+    x: 50,
+    y: yPosition,
+    size: 8,
+    font: font,
+    color: rgb(0.6, 0.6, 0.6),
+  });
 
   const pdfBytes = await pdfDoc.save();
   return pdfBytes;

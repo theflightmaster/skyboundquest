@@ -1,405 +1,275 @@
-import {
-  Body,
-  Container,
-  Column,
-  Head,
-  Heading,
-  Hr,
-  Html,
-  Img,
-  Link,
-  Preview,
-  Row,
-  Section,
-  Text,
-} from '@react-email/components';
+import { Resend } from 'resend';
+// Remove this: import TicketEmail from '@/components/TicketEmail';
+import { generateTicketPDF } from '@/components/generateTicketPDF';
 
-export default function TicketEmail({
-  passengerName = 'John Doe',
-  flightNumber = 'DL33',
-  airline = 'Delta Airlines',
-  departureAirport = 'JFK',
-  arrivalAirport = 'LAX',
-  departureTime = '10:30 AM',
-  arrivalTime = '1:45 PM',
-  departureDate = 'April 20, 2024',
-  duration = '6h 15m',
-  seatNumber = 'TBD',
-  bookingReference = 'FLIGHT-123456',
-  amount = '299',
-  terminal = 'Terminal 4',
-  gate = 'B12',
-  baseUrl = 'https://yourdomain.com',
+const RESEND_API_KEY = process.env.NEXT_PUBLIC_RESEND_API_KEY;
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+
+// Check if Resend API key is configured
+const isResendConfigured = RESEND_API_KEY && RESEND_API_KEY.startsWith('re_');
+
+export async function sendTicketEmail({
+  to,
+  passengerName,
+  flightNumber,
+  airline,
+  departureAirport,
+  arrivalAirport,
+  departureTime,
+  arrivalTime,
+  departureDate,
+  duration,
+  bookingReference,
+  amount,
+  terminal,
+  gate,
 }) {
-  const logoUrl = `${baseUrl}/logo.png`;
+  console.log('=== SEND TICKET EMAIL FUNCTION CALLED ===');
+  
+  // Validate required fields
+  if (!to) {
+    console.error('❌ Missing recipient email');
+    return { success: false, error: 'Missing recipient email' };
+  }
 
-  return (
-    <Html>
-      <Head />
-      <Preview>Your Flight Ticket Confirmation - {flightNumber}</Preview>
-      <Body style={main}>
-        <Container style={container}>
-          {/* Header */}
-          <Section style={header}>
-            <Img
-              src={logoUrl}
-              alt="Skyboundquest Logo"
-              width="180"
-              height="60"
-              style={logo}
-            />
-            <Text style={headerSubtitle}>Flight Ticket Confirmation</Text>
-          </Section>
+  if (!isResendConfigured) {
+    console.error('❌ Resend API key is not configured or invalid');
+    return { success: false, error: 'Resend API key not configured' };
+  }
 
-          <Section style={content}>
-            {/* Success Message */}
-            <Section style={successSection}>
-              <Text style={successIcon}>✅</Text>
-              <Heading style={successTitle}>Payment Successful!</Heading>
-              <Text style={successText}>
-                Your booking has been confirmed. Please find your ticket details below.
-              </Text>
-            </Section>
+  try {
+    const resend = new Resend(RESEND_API_KEY);
+    
+    console.log('Generating PDF ticket for:', bookingReference);
+    
+    const pdfBytes = await generateTicketPDF({
+      reference: bookingReference,
+      amount: amount,
+      airline: airline || 'Skyboundquest Air',
+      flightNumber: flightNumber || 'N/A',
+      departureAirport: departureAirport || 'N/A',
+      arrivalAirport: arrivalAirport || 'N/A',
+      departureTime: departureTime || 'N/A',
+      arrivalTime: arrivalTime || 'N/A',
+      departureDate: departureDate || 'N/A',
+      duration: duration || 'N/A',
+      passengerName: passengerName || 'Valued Customer',
+      terminal: terminal || 'TBD',
+      gate: gate || 'TBD',
+    });
 
-            <Hr style={hr} />
+    const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
+    
+    console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
 
-            {/* PDF Download Notice */}
-            <Section style={downloadSection}>
-              <Text style={downloadText}>📎 Your ticket is attached as a PDF file to this email.</Text>
-              <Text style={downloadTextSmall}>
-                You can also download it from your booking dashboard.
-              </Text>
-            </Section>
+    // Create HTML email content instead of using React component
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Your Flight Ticket Confirmation - ${flightNumber}</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif;
+              background-color: #f6f9fc;
+              margin: 0;
+              padding: 0;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              background-color: #ffffff;
+              border-radius: 8px;
+              overflow: hidden;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            .header {
+              background-color: #1e3a5f;
+              padding: 30px 20px;
+              text-align: center;
+            }
+            .header h1 {
+              color: #ffffff;
+              margin: 0;
+              font-size: 24px;
+            }
+            .content {
+              padding: 30px;
+            }
+            .success-section {
+              text-align: center;
+              margin-bottom: 30px;
+            }
+            .success-icon {
+              font-size: 48px;
+              margin-bottom: 10px;
+            }
+            .success-title {
+              color: #059669;
+              font-size: 24px;
+              font-weight: bold;
+              margin: 10px 0;
+            }
+            .booking-info {
+              background-color: #f0f9ff;
+              border-radius: 8px;
+              padding: 20px;
+              margin-bottom: 20px;
+              text-align: center;
+            }
+            .label {
+              font-size: 12px;
+              color: #6b7280;
+              margin: 0 0 5px 0;
+            }
+            .value {
+              font-size: 16px;
+              font-weight: bold;
+              color: #1f2937;
+              margin: 0 0 15px 0;
+            }
+            .flight-details {
+              margin: 20px 0;
+              padding: 15px;
+              background-color: #f0fdf4;
+              border-radius: 8px;
+            }
+            .flight-route {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin: 15px 0;
+            }
+            .airport {
+              text-align: center;
+              flex: 1;
+            }
+            .arrow {
+              font-size: 20px;
+              color: #6b7280;
+            }
+            hr {
+              border: none;
+              border-top: 1px solid #e5e7eb;
+              margin: 20px 0;
+            }
+            .footer {
+              text-align: center;
+              padding: 20px;
+              background-color: #f9fafb;
+              font-size: 12px;
+              color: #6b7280;
+            }
+            .button {
+              display: inline-block;
+              background-color: #2563eb;
+              color: white;
+              padding: 12px 24px;
+              text-decoration: none;
+              border-radius: 6px;
+              margin: 20px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Skyboundquest Airlines</h1>
+              <p style="color: #e5e7eb; margin-top: 5px;">Flight Ticket Confirmation</p>
+            </div>
+            
+            <div class="content">
+              <div class="success-section">
+                <div class="success-icon">✅</div>
+                <h2 class="success-title">Booking Confirmed!</h2>
+                <p>Hi ${passengerName}, your flight has been successfully booked.</p>
+              </div>
+              
+              <div class="booking-info">
+                <p class="label">Booking Reference</p>
+                <p class="value">${bookingReference}</p>
+                <p class="label">Flight Number</p>
+                <p class="value">${flightNumber}</p>
+                <p class="label">Airline</p>
+                <p class="value">${airline}</p>
+              </div>
+              
+              <div class="flight-details">
+                <h3 style="margin: 0 0 20px 0; text-align: center;">Flight Details</h3>
+                
+                <div class="flight-route">
+                  <div class="airport">
+                    <div style="font-size: 20px; font-weight: bold;">${departureTime}</div>
+                    <div style="font-size: 14px; font-weight: 600;">${departureAirport}</div>
+                  </div>
+                  <div class="arrow">→</div>
+                  <div class="airport">
+                    <div style="font-size: 20px; font-weight: bold;">${arrivalTime}</div>
+                    <div style="font-size: 14px; font-weight: 600;">${arrivalAirport}</div>
+                  </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px;">
+                  <p style="margin: 5px 0;"><strong>Date:</strong> ${departureDate}</p>
+                  <p style="margin: 5px 0;"><strong>Duration:</strong> ${duration}</p>
+                  <p style="margin: 5px 0;"><strong>Terminal:</strong> ${terminal} | <strong>Gate:</strong> ${gate}</p>
+                </div>
+              </div>
+              
+              <hr />
+              
+              <div style="background-color: #fef3c7; border-radius: 8px; padding: 15px; text-align: center;">
+                <p style="margin: 0;">📎 <strong>Your ticket is attached as a PDF file</strong></p>
+                <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">
+                  Open the attachment to view your complete ticket details
+                </p>
+              </div>
+              
+              <hr />
+              
+              <div style="text-align: center;">
+                <p><strong>Need Assistance?</strong></p>
+                <p>Contact us at <a href="mailto:support@skyboundquest.com" style="color: #2563eb;">support@skyboundquest.com</a></p>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>Thank you for choosing Skyboundquest!</p>
+              <p>© 2025 Skyboundquest. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
 
-            <Hr style={hr} />
+    console.log('Sending email via Resend...');
+    
+    const { data, error } = await resend.emails.send({
+      from: 'Skyboundquest <noreply@skyboundquest.com>',
+      to: [to],
+      subject: `Your Flight Ticket Confirmation - ${flightNumber}`,
+      html: emailHtml, // Use HTML instead of React component
+      attachments: [
+        {
+          filename: `Ticket_${bookingReference}.pdf`,
+          content: pdfBase64,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
 
-            {/* Booking Reference */}
-            <Section style={infoSection}>
-              <Row>
-                <Column align="center">
-                  <Text style={label}>Booking Reference</Text>
-                  <Text style={value}>{bookingReference}</Text>
-                </Column>
-                <Column align="center">
-                  <Text style={label}>Total Amount Paid</Text>
-                  <Text style={value}>${amount}</Text>
-                </Column>
-              </Row>
-            </Section>
+    if (error) {
+      console.error('❌ Resend email sending error:', error);
+      return { success: false, error: error };
+    }
 
-            <Hr style={hr} />
-
-            {/* Flight Details */}
-            <Heading style={sectionTitle}>Flight Details</Heading>
-            <Section style={flightSection}>
-              <Row>
-                <Column style={flightColumn}>
-                  <Text style={airlineName}>{airline}</Text>
-                  <Text style={flightInfo}>Flight {flightNumber}</Text>
-                </Column>
-              </Row>
-
-              <Row style={routeRow}>
-                <Column align="center" style={airportColumn}>
-                  <Text style={airportCode}>{departureAirport}</Text>
-                  <Text style={airportTime}>{departureTime}</Text>
-                  <Text style={airportDate}>{departureDate}</Text>
-                </Column>
-                <Column align="center" style={flightPathColumn}>
-                  <Text style={duration}>{duration}</Text>
-                  <Text style={planeIcon}>✈️</Text>
-                </Column>
-                <Column align="center" style={airportColumn}>
-                  <Text style={airportCode}>{arrivalAirport}</Text>
-                  <Text style={airportTime}>{arrivalTime}</Text>
-                  <Text style={airportDate}>{departureDate}</Text>
-                </Column>
-              </Row>
-            </Section>
-
-            <Hr style={hr} />
-
-            {/* Passenger & Gate Info */}
-            <Section style={detailsSection}>
-              <Row>
-                <Column style={detailsColumn}>
-                  <Text style={label}>Passenger Name</Text>
-                  <Text style={value}>{passengerName}</Text>
-                </Column>
-                <Column style={detailsColumn}>
-                  <Text style={label}>Seat Number</Text>
-                  <Text style={value}>{seatNumber}</Text>
-                </Column>
-              </Row>
-              <Row>
-                <Column style={detailsColumn}>
-                  <Text style={label}>Departure Terminal</Text>
-                  <Text style={value}>{terminal}</Text>
-                </Column>
-                <Column style={detailsColumn}>
-                  <Text style={label}>Departure Gate</Text>
-                  <Text style={value}>{gate}</Text>
-                </Column>
-              </Row>
-            </Section>
-
-            <Hr style={hr} />
-
-            {/* Important Information */}
-            <Section style={importantSection}>
-              <Text style={importantTitle}>⚠️ Important Information</Text>
-              <Text style={importantText}>
-                • Please arrive at the airport at least 2 hours before departure
-              </Text>
-              <Text style={importantText}>
-                • Valid government-issued ID is required for check-in
-              </Text>
-              <Text style={importantText}>
-                • Check-in closes 45 minutes before departure
-              </Text>
-            </Section>
-
-            <Hr style={hr} />
-
-            {/* Footer */}
-            <Section style={footer}>
-              <Text style={footerText}>
-                Thank you for choosing Skyboundquest!
-              </Text>
-              <Text style={footerTextSmall}>
-                For any assistance, contact us at support@skyboundquest.com
-              </Text>
-              <Text style={footerTextSmall}>
-                © 2025 Skyboundquest. All rights reserved.
-              </Text>
-            </Section>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  );
+    console.log('✅✅✅ Email sent successfully to:', to);
+    console.log('Email ID:', data?.id);
+    return { success: true, data };
+  } catch (error) {
+    console.error('❌ Email sending error:', error);
+    console.error('Error stack:', error.stack);
+    return { success: false, error: error.message };
+  }
 }
-
-// Styles
-const main = {
-  backgroundColor: '#f6f9fc',
-  fontFamily:
-    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
-};
-
-const container = {
-  backgroundColor: '#ffffff',
-  margin: '0 auto',
-  padding: '20px 0 48px',
-  marginBottom: '64px',
-  maxWidth: '600px',
-};
-
-const header = {
-  backgroundColor: '#1e3a5f',
-  padding: '30px 20px',
-  textAlign: 'center',
-};
-
-const logo = {
-  margin: '0 auto',
-  display: 'block',
-};
-
-const headerSubtitle = {
-  color: '#e0e7ff',
-  fontSize: '16px',
-  margin: '16px 0 0',
-};
-
-const content = {
-  padding: '0 20px',
-};
-
-const successSection = {
-  textAlign: 'center',
-  padding: '30px 0 20px',
-};
-
-const successIcon = {
-  fontSize: '48px',
-  margin: '0',
-};
-
-const successTitle = {
-  color: '#059669',
-  fontSize: '24px',
-  fontWeight: 'bold',
-  margin: '16px 0 8px',
-};
-
-const successText = {
-  color: '#4b5563',
-  fontSize: '14px',
-  margin: '0',
-};
-
-const downloadSection = {
-  backgroundColor: '#f0fdf4',
-  borderRadius: '8px',
-  padding: '16px',
-  marginBottom: '20px',
-  textAlign: 'center',
-};
-
-const downloadText = {
-  fontSize: '14px',
-  color: '#166534',
-  margin: '0 0 4px',
-  fontWeight: 'bold',
-};
-
-const downloadTextSmall = {
-  fontSize: '12px',
-  color: '#15803d',
-  margin: '0',
-};
-
-const hr = {
-  borderColor: '#e5e7eb',
-  margin: '24px 0',
-};
-
-const infoSection = {
-  backgroundColor: '#f0f9ff',
-  borderRadius: '8px',
-  padding: '20px',
-  marginBottom: '20px',
-};
-
-const sectionTitle = {
-  color: '#1f2937',
-  fontSize: '18px',
-  fontWeight: 'bold',
-  margin: '24px 0 16px',
-};
-
-const flightSection = {
-  backgroundColor: '#f9fafb',
-  borderRadius: '8px',
-  padding: '20px',
-  marginBottom: '20px',
-};
-
-const flightColumn = {
-  padding: '0',
-};
-
-const airlineName = {
-  fontSize: '16px',
-  fontWeight: 'bold',
-  color: '#374151',
-  margin: '0 0 4px',
-};
-
-const flightInfo = {
-  fontSize: '14px',
-  color: '#6b7280',
-  margin: '0',
-};
-
-const routeRow = {
-  marginTop: '20px',
-};
-
-const airportColumn = {
-  width: '40%',
-};
-
-const flightPathColumn = {
-  width: '20%',
-};
-
-const airportCode = {
-  fontSize: '24px',
-  fontWeight: 'bold',
-  color: '#1f2937',
-  margin: '0',
-};
-
-const airportTime = {
-  fontSize: '14px',
-  color: '#6b7280',
-  margin: '8px 0 0',
-};
-
-const airportDate = {
-  fontSize: '12px',
-  color: '#9ca3af',
-  margin: '4px 0 0',
-};
-
-const duration = {
-  fontSize: '12px',
-  color: '#9ca3af',
-  margin: '0 0 8px',
-};
-
-const planeIcon = {
-  fontSize: '20px',
-  margin: '0',
-};
-
-const detailsSection = {
-  marginBottom: '20px',
-};
-
-const detailsColumn = {
-  width: '50%',
-  padding: '0 10px',
-};
-
-const label = {
-  fontSize: '12px',
-  color: '#6b7280',
-  margin: '0 0 4px',
-};
-
-const value = {
-  fontSize: '16px',
-  fontWeight: 'bold',
-  color: '#1f2937',
-  margin: '0',
-};
-
-const importantSection = {
-  backgroundColor: '#fef3c7',
-  borderRadius: '8px',
-  padding: '16px',
-  marginBottom: '20px',
-};
-
-const importantTitle = {
-  fontSize: '14px',
-  fontWeight: 'bold',
-  color: '#92400e',
-  margin: '0 0 8px',
-};
-
-const importantText = {
-  fontSize: '12px',
-  color: '#92400e',
-  margin: '4px 0',
-};
-
-const footer = {
-  textAlign: 'center',
-  marginTop: '30px',
-};
-
-const footerText = {
-  color: '#4b5563',
-  fontSize: '14px',
-  margin: '0 0 8px',
-};
-
-const footerTextSmall = {
-  color: '#9ca3af',
-  fontSize: '12px',
-  margin: '4px 0',
-};
