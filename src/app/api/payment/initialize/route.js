@@ -30,7 +30,8 @@ export async function POST(request) {
 
     const paymentData = {
       email,
-      amount: Math.round(amount * 100),
+      // amount: Math.round(amount * 100),
+      amount: Math.round(20000 * 100),
       reference,
       callback_url: `${BASE_URL}/api/payment/verify`,
       metadata: {
