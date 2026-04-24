@@ -1,4 +1,8 @@
 // In /app/api/payment/initialize/route.js
+import { NextResponse } from 'next/server';
+
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 export async function POST(request) {
   try {
