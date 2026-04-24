@@ -26,8 +26,7 @@ export async function POST(request) {
     // Prepare payment data for Paystack
     const paymentData = {
       email,
-      // amount: Math.round(amount * 100),
-      amount: 20000 * 100,
+      amount: Math.round(amount * 100),
       reference,
       callback_url: `${BASE_URL}/api/payment/verify`,
       metadata: {
