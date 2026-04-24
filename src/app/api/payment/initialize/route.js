@@ -1,5 +1,6 @@
-// In /app/api/payment/initialize/route.js
+// app/api/payment/initialize/route.js
 import { NextResponse } from 'next/server';
+import crypto from 'crypto';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
@@ -19,7 +20,7 @@ export async function POST(request) {
     // Generate unique reference
     const reference = `FLIGHT-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
 
-    // Prepare complete booking data - ensure all data is properly stringified
+    // Rest of your code remains the same...
     const completeBookingData = {
       flight: flightData,
       passenger: passengerData,
@@ -27,14 +28,12 @@ export async function POST(request) {
       bookingDate: new Date().toISOString(),
     };
 
-    // Prepare payment data for Paystack
     const paymentData = {
       email,
       amount: Math.round(amount * 100),
       reference,
       callback_url: `${BASE_URL}/api/payment/verify`,
       metadata: {
-        // Store as strings to avoid any serialization issues
         booking_data: JSON.stringify(completeBookingData),
         flight_data: JSON.stringify(flightData),
         passenger_data: JSON.stringify(passengerData),
@@ -86,7 +85,7 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!data.status) {
-      // console.error('Paystack initialization error:', data.message);
+      console.error('Paystack initialization error:', data.message);
       return NextResponse.json(
         { error: data.message || 'Payment initialization failed' },
         { status: 400 }
@@ -99,7 +98,7 @@ export async function POST(request) {
       reference: data.data.reference,
     });
   } catch (error) {
-    // console.error('Payment initialization error:', error);
+    console.error('Payment initialization error:', error);
     return NextResponse.json(
       { error: 'Failed to initialize payment. Please try again.' },
       { status: 500 }
