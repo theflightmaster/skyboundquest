@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import TicketEmail from '@/components/TicketEmail';
+import { TicketEmail } from '@/components/TicketEmail';
 import { generateTicketPDF } from '@/components/generateTicketPDF';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -75,7 +75,7 @@ export async function sendTicketEmail({
 
     return { success: true, data };
   } catch (error) {
-    // console.error('Email sending error:', error);
+    console.error('Email sending error:', error);
     return { success: false, error };
   }
 }

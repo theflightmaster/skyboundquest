@@ -1,5 +1,4 @@
 import { Resend } from 'resend';
-// Remove this: import TicketEmail from '@/components/TicketEmail';
 import { generateTicketPDF } from '@/components/generateTicketPDF';
 
 const RESEND_API_KEY = process.env.NEXT_PUBLIC_RESEND_API_KEY;
