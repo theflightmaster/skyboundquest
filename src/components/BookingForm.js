@@ -23,7 +23,7 @@ export default function BookingForm({ flight, flightData, keyDetails }) {
 
   // Use the price from flight data
   // const totalAmount = flight?.price?.amount || flight?.total_price?.amount || 299;
-  connst totalAmount = 20000;
+  const totalAmount = 20000;
   
   const formattedAmount = totalAmount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
