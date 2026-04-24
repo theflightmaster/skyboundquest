@@ -45,7 +45,7 @@ export async function GET(request) {
       }
     });
   } catch (error) {
-    console.error('Flight search error:', error.message);
+    // console.error('Flight search error:', error.message);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch flights. Please try again.' },
       { status: 500 }

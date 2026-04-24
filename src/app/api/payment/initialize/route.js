@@ -83,7 +83,7 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!data.status) {
-      console.error('Paystack initialization error:', data.message);
+      // console.error('Paystack initialization error:', data.message);
       return NextResponse.json(
         { error: data.message || 'Payment initialization failed' },
         { status: 400 }
@@ -96,7 +96,7 @@ export async function POST(request) {
       reference: data.data.reference,
     });
   } catch (error) {
-    console.error('Payment initialization error:', error);
+    // console.error('Payment initialization error:', error);
     return NextResponse.json(
       { error: 'Failed to initialize payment. Please try again.' },
       { status: 500 }

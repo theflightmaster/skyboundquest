@@ -18,7 +18,7 @@ export async function generateTicketPDF(bookingData) {
     const logoBuffer = await response.arrayBuffer();
     logoImage = await pdfDoc.embedPng(logoBuffer);
   } catch (error) {
-    console.error('Could not load logo.png:', error.message); 
+    // console.error('Could not load logo.png:', error.message); 
     // Continue without logo
   }
   

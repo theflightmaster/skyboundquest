@@ -26,7 +26,7 @@ export async function GET(request, { params }) {
 
     return NextResponse.json({ success: true, data: flight });
   } catch (error) {
-    console.error('Flight detail error:', error.message);
+    // console.error('Flight detail error:', error.message);
     return NextResponse.json(
       { error: 'Failed to fetch flight details.' },
       { status: 500 }

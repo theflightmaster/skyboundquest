@@ -31,7 +31,7 @@ export async function GET(request) {
     const data = await response.json();
 
     if (!data.status) {
-      console.error('Paystack verification error:', data.message);
+      // console.error('Paystack verification error:', data.message);
       return NextResponse.redirect(
         `${BASE_URL}/payment/cancel?error=verification_failed`
       );
@@ -84,9 +84,9 @@ export async function GET(request) {
       const emailResult = await sendTicketEmail(emailData);
       
       if (emailResult.success) {
-        console.log('Email sent successfully to:', bookingData.customerEmail);
+        // console.log('Email sent successfully to:', bookingData.customerEmail);
       } else {
-        console.error('Failed to send email:', emailResult.error);
+        // console.error('Failed to send email:', emailResult.error);
       }
 
       // Optionally generate and attach PDF (if you want to add PDF attachment)
@@ -115,7 +115,7 @@ export async function GET(request) {
       );
     }
   } catch (error) {
-    console.error('Payment verification error:', error);
+    //console.error('Payment verification error:', error);
     return NextResponse.redirect(
       `${BASE_URL}/payment/cancel?error=verification_error`
     );

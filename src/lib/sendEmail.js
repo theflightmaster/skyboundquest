@@ -69,13 +69,13 @@ export async function sendTicketEmail({
     });
 
     if (error) {
-      console.error('Email sending error:', error);
+      // console.error('Email sending error:', error);
       return { success: false, error };
     }
 
     return { success: true, data };
   } catch (error) {
-    console.error('Email sending error:', error);
+    // console.error('Email sending error:', error);
     return { success: false, error };
   }
 }

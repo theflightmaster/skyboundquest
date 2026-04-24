@@ -19,7 +19,7 @@ export async function initializePayment(data) {
     });
     return response.data;
   } catch (error) {
-    console.error('Paystack API Error:', error);
+    // console.error('Paystack API Error:', error);
     throw error;
   }
 }
@@ -29,7 +29,7 @@ export async function verifyPayment(reference) {
     const response = await paystackClient.get(`/transaction/verify/${reference}`);
     return response.data;
   } catch (error) {
-    console.error('Paystack API Error:', error);
+    // console.error('Paystack API Error:', error);
     throw error;
   }
 }
@@ -39,7 +39,7 @@ export async function listTransactions() {
     const response = await paystackClient.get('/transaction');
     return response.data;
   } catch (error) {
-    console.error('Paystack API Error:', error);
+    // console.error('Paystack API Error:', error);
     throw error;
   }
 }

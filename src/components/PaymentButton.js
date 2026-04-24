@@ -48,7 +48,7 @@ export default function PaymentButton({ amount, email, flightData, passengerData
         setLoading(false);
       }
     } catch (error) {
-      console.error('Payment error:', error);
+      // console.error('Payment error:', error);
       toast.dismiss(loadingToast);
       toast.error('An error occurred. Please try again.');
       setLoading(false);

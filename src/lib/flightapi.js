@@ -32,7 +32,7 @@ export async function searchFlights({
       const res = await fetch(url, { next: { revalidate: 300 } });
       
       if (!res.ok) {
-        console.error(`Failed to fetch ${cabinClass}:`, res.status);
+        // console.error(`Failed to fetch ${cabinClass}:`, res.status);
         return null;
       }
       
@@ -44,7 +44,7 @@ export async function searchFlights({
         return normalizeSearchResponse(data, departure_iata, arrival_iata, flight_date, cabinClass);
       }
     } catch (error) {
-      console.error(`Error fetching ${cabinClass}:`, error.message);
+      // console.error(`Error fetching ${cabinClass}:`, error.message);
       return null;
     }
   });

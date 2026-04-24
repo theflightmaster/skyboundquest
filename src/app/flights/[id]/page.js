@@ -37,7 +37,7 @@ function FlightDetails() {
       const data = await response.json();
       setFlight(data.data);
     } catch (error) {
-      console.error('Error fetching flight details:', error);
+      // console.error('Error fetching flight details:', error);
     } finally {
       setLoading(false);
     }

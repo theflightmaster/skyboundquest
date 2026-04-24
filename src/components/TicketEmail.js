@@ -8,7 +8,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 // Check if Resend API key is configured
 const isResendConfigured = RESEND_API_KEY && RESEND_API_KEY.startsWith('re_');
 
-export async function sendTicketEmail({
+export async function TicketEmail({
   to,
   passengerName,
   flightNumber,
@@ -24,23 +24,23 @@ export async function sendTicketEmail({
   terminal,
   gate,
 }) {
-  console.log('=== SEND TICKET EMAIL FUNCTION CALLED ===');
+  // console.log('=== SEND TICKET EMAIL FUNCTION CALLED ===');
   
   // Validate required fields
   if (!to) {
-    console.error('❌ Missing recipient email');
+    // console.error('❌ Missing recipient email');
     return { success: false, error: 'Missing recipient email' };
   }
 
   if (!isResendConfigured) {
-    console.error('❌ Resend API key is not configured or invalid');
+    // console.error('❌ Resend API key is not configured or invalid');
     return { success: false, error: 'Resend API key not configured' };
   }
 
   try {
     const resend = new Resend(RESEND_API_KEY);
     
-    console.log('Generating PDF ticket for:', bookingReference);
+    // console.log('Generating PDF ticket for:', bookingReference);
     
     const pdfBytes = await generateTicketPDF({
       reference: bookingReference,
@@ -60,9 +60,9 @@ export async function sendTicketEmail({
 
     const pdfBase64 = Buffer.from(pdfBytes).toString('base64');
     
-    console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
+    // console.log('PDF generated successfully, size:', pdfBytes.length, 'bytes');
 
-    // Create HTML email content instead of using React component
+    // Create HTML email content with logo and light gray cards
     const emailHtml = `
       <!DOCTYPE html>
       <html>
@@ -72,27 +72,34 @@ export async function sendTicketEmail({
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif;
-              background-color: #f6f9fc;
+              background-color: #f3f4f6;
               margin: 0;
-              padding: 0;
+              padding: 20px;
             }
             .container {
               max-width: 600px;
               margin: 0 auto;
               background-color: #ffffff;
-              border-radius: 8px;
+              border-radius: 12px;
               overflow: hidden;
-              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
             }
             .header {
-              background-color: #1e3a5f;
+              background-color: #ffffff;
               padding: 30px 20px;
               text-align: center;
+              border-bottom: 1px solid #e5e7eb;
             }
-            .header h1 {
-              color: #ffffff;
+            .logo {
+              max-width: 180px;
+              height: auto;
+              margin-bottom: 10px;
+            }
+            .logo-placeholder {
+              font-size: 28px;
+              font-weight: bold;
+              color: #1e3a5f;
               margin: 0;
-              font-size: 24px;
             }
             .content {
               padding: 30px;
@@ -111,17 +118,26 @@ export async function sendTicketEmail({
               font-weight: bold;
               margin: 10px 0;
             }
-            .booking-info {
-              background-color: #f0f9ff;
-              border-radius: 8px;
+            .card {
+              background-color: #f9fafb;
+              border-radius: 10px;
               padding: 20px;
               margin-bottom: 20px;
-              text-align: center;
+              border: 1px solid #e5e7eb;
+            }
+            .booking-info {
+              background-color: #f9fafb;
+              border-radius: 10px;
+              padding: 20px;
+              margin-bottom: 20px;
+              border: 1px solid #e5e7eb;
             }
             .label {
               font-size: 12px;
               color: #6b7280;
               margin: 0 0 5px 0;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
             }
             .value {
               font-size: 16px;
@@ -131,9 +147,10 @@ export async function sendTicketEmail({
             }
             .flight-details {
               margin: 20px 0;
-              padding: 15px;
-              background-color: #f0fdf4;
-              border-radius: 8px;
+              padding: 20px;
+              background-color: #f9fafb;
+              border-radius: 10px;
+              border: 1px solid #e5e7eb;
             }
             .flight-route {
               display: flex;
@@ -145,14 +162,60 @@ export async function sendTicketEmail({
               text-align: center;
               flex: 1;
             }
-            .arrow {
+            .airport-code {
               font-size: 20px;
+              font-weight: bold;
+              color: #1f2937;
+            }
+            .airport-name {
+              font-size: 12px;
               color: #6b7280;
+              margin-top: 5px;
+            }
+            .arrow {
+              font-size: 24px;
+              color: #9ca3af;
+              margin: 0 10px;
+            }
+            .flight-time {
+              font-size: 18px;
+              font-weight: bold;
+              color: #1f2937;
+              margin: 5px 0;
+            }
+            .flight-date {
+              font-size: 12px;
+              color: #6b7280;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              padding: 10px 0;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            .info-row:last-child {
+              border-bottom: none;
+            }
+            .info-label {
+              font-size: 13px;
+              color: #6b7280;
+            }
+            .info-value {
+              font-size: 13px;
+              font-weight: 600;
+              color: #1f2937;
             }
             hr {
               border: none;
               border-top: 1px solid #e5e7eb;
               margin: 20px 0;
+            }
+            .attachment-notice {
+              background-color: #fef3c7;
+              border-radius: 10px;
+              padding: 15px;
+              text-align: center;
+              border: 1px solid #fde68a;
             }
             .footer {
               text-align: center;
@@ -160,6 +223,7 @@ export async function sendTicketEmail({
               background-color: #f9fafb;
               font-size: 12px;
               color: #6b7280;
+              border-top: 1px solid #e5e7eb;
             }
             .button {
               display: inline-block;
@@ -175,52 +239,66 @@ export async function sendTicketEmail({
         <body>
           <div class="container">
             <div class="header">
-              <h1>Skyboundquest Airlines</h1>
-              <p style="color: #e5e7eb; margin-top: 5px;">Flight Ticket Confirmation</p>
+              <img src="${BASE_URL}/logo.png" alt="Skyboundquest Logo" class="logo" onerror="this.onerror=null; this.style.display='none'; document.getElementById('logo-fallback').style.display='block';" />
+              <div id="logo-fallback" style="display: none;">
+                <p class="logo-placeholder">SKYBOUNDQUEST</p>
+              </div>
             </div>
             
             <div class="content">
               <div class="success-section">
-                <div class="success-icon">✅</div>
                 <h2 class="success-title">Booking Confirmed!</h2>
-                <p>Hi ${passengerName}, your flight has been successfully booked.</p>
+                <p style="color: #4b5563;">Hi ${passengerName}, your flight has been successfully booked.</p>
               </div>
               
-              <div class="booking-info">
-                <p class="label">Booking Reference</p>
-                <p class="value">${bookingReference}</p>
-                <p class="label">Flight Number</p>
-                <p class="value">${flightNumber}</p>
-                <p class="label">Airline</p>
-                <p class="value">${airline}</p>
+              <div class="card">
+                <div class="info-row">
+                  <span class="info-label">Booking Reference</span>
+                  <span class="info-value">${bookingReference}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Flight Number</span>
+                  <span class="info-value">${flightNumber}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Airline</span>
+                  <span class="info-value">${airline}</span>
+                </div>
               </div>
               
               <div class="flight-details">
-                <h3 style="margin: 0 0 20px 0; text-align: center;">Flight Details</h3>
-                
                 <div class="flight-route">
                   <div class="airport">
-                    <div style="font-size: 20px; font-weight: bold;">${departureTime}</div>
-                    <div style="font-size: 14px; font-weight: 600;">${departureAirport}</div>
+                    <div class="airport-code">${departureAirport.split(' - ')[0]}</div>
+                    <div class="flight-time">${departureTime}</div>
+                    <div class="flight-date">${departureDate}</div>
                   </div>
                   <div class="arrow">→</div>
                   <div class="airport">
-                    <div style="font-size: 20px; font-weight: bold;">${arrivalTime}</div>
-                    <div style="font-size: 14px; font-weight: 600;">${arrivalAirport}</div>
+                    <div class="airport-code">${arrivalAirport.split(' - ')[0]}</div>
+                    <div class="flight-time">${arrivalTime}</div>
+                    <div class="flight-date">${departureDate}</div>
                   </div>
                 </div>
-                
-                <div style="text-align: center; margin-top: 15px;">
-                  <p style="margin: 5px 0;"><strong>Date:</strong> ${departureDate}</p>
-                  <p style="margin: 5px 0;"><strong>Duration:</strong> ${duration}</p>
-                  <p style="margin: 5px 0;"><strong>Terminal:</strong> ${terminal} | <strong>Gate:</strong> ${gate}</p>
+                <hr style="margin: 15px 0;" />
+                <div class="info-row">
+                  <span class="info-label">Duration</span>
+                  <span class="info-value">${duration}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Terminal</span>
+                  <span class="info-value">${terminal}</span>
+                </div>
+                <div class="info-row">
+                  <span class="info-label">Gate</span>
+                  <span class="info-value">${gate}</span>
                 </div>
               </div>
               
               <hr />
               
-              <div style="background-color: #fef3c7; border-radius: 8px; padding: 15px; text-align: center;">
-                <p style="margin: 0;">📎 <strong>Your ticket is attached as a PDF file</strong></p>
+              <div class="attachment-notice">
+                <p style="margin: 0; font-size: 14px;">📎 <strong>Your ticket is attached as a PDF file</strong></p>
                 <p style="margin: 5px 0 0 0; font-size: 12px; color: #6b7280;">
                   Open the attachment to view your complete ticket details
                 </p>
@@ -229,21 +307,23 @@ export async function sendTicketEmail({
               <hr />
               
               <div style="text-align: center;">
-                <p><strong>Need Assistance?</strong></p>
-                <p>Contact us at <a href="mailto:support@skyboundquest.com" style="color: #2563eb;">support@skyboundquest.com</a></p>
+                <p style="margin: 0 0 5px 0;"><strong>Need Assistance?</strong></p>
+                <p style="margin: 0;">
+                  Contact us at <a href="mailto:support@skyboundquest.com" style="color: #2563eb; text-decoration: none;">support@skyboundquest.com</a>
+                </p>
               </div>
             </div>
             
             <div class="footer">
-              <p>Thank you for choosing Skyboundquest!</p>
-              <p>© 2025 Skyboundquest. All rights reserved.</p>
+              <p style="margin: 0 0 5px 0;">Thank you for choosing Skyboundquest!</p>
+              <p style="margin: 0; font-size: 11px;">© 2025 Skyboundquest. All rights reserved.</p>
             </div>
           </div>
         </body>
       </html>
     `;
 
-    console.log('Sending email via Resend...');
+    // console.log('Sending email via Resend...');
     
     const { data, error } = await resend.emails.send({
       from: 'Skyboundquest <noreply@skyboundquest.com>',
@@ -260,16 +340,16 @@ export async function sendTicketEmail({
     });
 
     if (error) {
-      console.error('❌ Resend email sending error:', error);
+      // console.error('❌ Resend email sending error:', error);
       return { success: false, error: error };
     }
 
-    console.log('✅✅✅ Email sent successfully to:', to);
-    console.log('Email ID:', data?.id);
+    // console.log('✅✅✅ Email sent successfully to:', to);
+    // console.log('Email ID:', data?.id);
     return { success: true, data };
   } catch (error) {
-    console.error('❌ Email sending error:', error);
-    console.error('Error stack:', error.stack);
+    // console.error('❌ Email sending error:', error);
+    // console.error('Error stack:', error.stack);
     return { success: false, error: error.message };
   }
 }

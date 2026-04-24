@@ -41,7 +41,7 @@ export async function GET(request) {
       data: flight 
     });
   } catch (error) {
-    console.error('Flight tracking error:', error.message);
+    // console.error('Flight tracking error:', error.message);
     return NextResponse.json(
       { error: error.message || 'Failed to fetch flight information. Please try again.' },
       { status: 500 }
