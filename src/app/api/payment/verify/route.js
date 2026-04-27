@@ -1,7 +1,7 @@
 // app/api/payment/verify/route.js
 import { NextResponse } from 'next/server';
 import { sendTicketEmail } from '@/lib/sendEmail';
-import { connectToDatabase } from '@/lib/mongodb';
+// import { connectToDatabase } from '@/lib/mongodb';
 import Booking from '@/models/Booking';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
