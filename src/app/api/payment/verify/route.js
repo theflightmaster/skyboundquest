@@ -1,8 +1,6 @@
 // app/api/payment/verify/route.js
 import { NextResponse } from 'next/server';
 import { sendTicketEmail } from '@/lib/sendEmail';
-// import { connectToDatabase } from '@/lib/mongodb';
-import Booking from '@/models/Booking';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
@@ -54,16 +52,6 @@ export async function GET(request) {
     // console.log('Extracted keyDetails:', keyDetails);
     // console.log('Extracted flightData:', flightData);
 
-    // Connect to database
-    await connectToDatabase();
-
-    // Check if booking already exists
-    const existingBooking = await Booking.findOne({ bookingReference: reference });
-    if (existingBooking) {
-      // console.log('Booking already exists:', reference);
-      return NextResponse.redirect(`${BASE_URL}/payment/success?reference=${reference}&amount=${data.data.amount / 100}`);
-    }
-
     // Extract flight number - remove airline code if present
     let rawFlightNumber = keyDetails.flightNumber || flightData?.flightNumber || flightData?.flight?.iata || 'N/A';
     let airlineCode = keyDetails.airlineCode || flightData?.airline?.iata || flightData?.airlineCode || '';
@@ -91,11 +79,10 @@ export async function GET(request) {
     //   fullDisplay: fullFlightNumber
     // });
 
-    // Prepare booking data with complete details
+    // Prepare booking data for email
     const bookingData = {
       bookingReference: reference,
       transactionId: data.data.id.toString(),
-      paymentStatus: 'success',
       amount: data.data.amount / 100,
       currency: data.data.currency,
       paidAt: new Date(data.data.paid_at),
@@ -107,9 +94,7 @@ export async function GET(request) {
         address: passengerData.address || '',
       },
       flight: {
-        // Store only the numeric flight number (e.g., "1408")
         flightNumber: cleanFlightNumber,
-        // Store full flight number for display (e.g., "QR1408")
         fullFlightNumber: fullFlightNumber,
         airline: {
           name: keyDetails.airline || flightData?.airline?.name || flightData?.airlineName || 'Skyboundquest Air',
@@ -145,17 +130,10 @@ export async function GET(request) {
       },
       flightData: flightData,
       bookingDate: new Date(),
-      metadata: {
-        userAgent: request.headers.get('user-agent') || 'unknown',
-        ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
-        paymentGateway: 'paystack',
-        paymentReference: reference,
-      },
     };
 
     // Add return flight data if round trip
     if (flightData?.type === 'round_trip' && flightData?.return) {
-      // Process return flight number similarly
       let returnRawFlightNumber = flightData.return.flight?.iata || 'N/A';
       let returnCleanFlightNumber = returnRawFlightNumber;
       if (airlineCode && returnRawFlightNumber.startsWith(airlineCode)) {
@@ -196,33 +174,12 @@ export async function GET(request) {
       };
     }
 
-    // console.log('Booking data prepared:', {
-    //   reference: bookingData.bookingReference,
-    //   flightNumber: bookingData.flight.flightNumber,
-    //   fullFlightNumber: bookingData.flight.fullFlightNumber,
-    //   airline: bookingData.flight.airline.name,
-    //   departure: bookingData.flight.departureAirport.iata,
-    //   arrival: bookingData.flight.arrivalAirport.iata,
-    //   departureTime: bookingData.flight.departureTime,
-    //   departureDate: bookingData.flight.departureDate,
-    //   terminal: bookingData.flight.terminal,
-    //   gate: bookingData.flight.gate,
-    // });
-
-    // ========== DATABASE SAVE - COMMENTED OUT ==========
-    // Save to database
-    // const booking = new Booking(bookingData);
-    // await booking.save();
-    // console.log('✅ Booking saved to database:', reference);
-    // ========== END OF COMMENTED OUT SECTION ==========
-
     // Send email with ticket
     try {
-      // Prepare email data with complete flight information
       const emailData = {
         to: bookingData.passenger.email,
         passengerName: bookingData.passenger.fullName,
-        flightNumber: fullFlightNumber, // Use full flight number for display
+        flightNumber: fullFlightNumber,
         airline: bookingData.flight.airline.name,
         departureAirport: `${bookingData.flight.departureAirport.iata} - ${bookingData.flight.departureAirport.airport}`,
         arrivalAirport: `${bookingData.flight.arrivalAirport.iata} - ${bookingData.flight.arrivalAirport.airport}`,
@@ -236,21 +193,7 @@ export async function GET(request) {
         gate: bookingData.flight.gate,
       };
 
-      // console.log('Sending email with data:', emailData);
-
-      const emailResult = await sendTicketEmail(emailData);
-
-      // if (emailResult.success) {
-      //   console.log('✅ Email sent successfully to:', bookingData.passenger.email);
-      //   ========== DATABASE UPDATE - COMMENTED OUT ==========
-      //   await Booking.findOneAndUpdate(
-      //     { bookingReference: reference },
-      //     { emailSent: true, emailSentAt: new Date() }
-      //   );
-      //   ========== END OF COMMENTED OUT SECTION ==========
-      // } else {
-      //   console.error('❌ Failed to send email:', emailResult.error);
-      // }
+      await sendTicketEmail(emailData);
     } catch (emailError) {
       // console.error('Email sending error:', emailError);
     }
