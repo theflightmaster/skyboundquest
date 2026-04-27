@@ -21,10 +21,12 @@ function TrackFlightContent() {
     const urlFlightNumber = searchParams.get('flightNumber');
     const urlAirlineCode = searchParams.get('airlineCode');
     const urlDate = searchParams.get('date');
+    const urlEmail = searchParams.get('email');
+    const urlReference = searchParams.get('reference');
 
     if (urlFlightNumber && urlAirlineCode && urlDate) {
       // Auto-search when coming from external link
-      handleTrack(urlAirlineCode, urlFlightNumber, urlDate);
+      handleTrack(urlAirlineCode, urlFlightNumber, urlDate, urlEmail, urlReference);
     }
   }, [searchParams]);
 
@@ -51,13 +53,18 @@ function TrackFlightContent() {
     };
   }, [isMobileMenuOpen]);
 
-  const handleTrack = async (airlineCode, flightNumber, flightDate) => {
+  const handleTrack = async (airlineCode, flightNumber, flightDate, email = '', bookingReference = '') => {
     setLoading(true);
     setError(null);
     setTrackingResult(null);
 
     try {
-      const response = await fetch(`/api/flights/track?flightNumber=${flightNumber}&airlineCode=${airlineCode}&date=${flightDate}`);
+      // Build URL with query parameters
+      let url = `/api/flights/track?flightNumber=${flightNumber}&airlineCode=${airlineCode}&date=${flightDate}`;
+      if (email) url += `&email=${encodeURIComponent(email)}`;
+      if (bookingReference) url += `&reference=${encodeURIComponent(bookingReference)}`;
+      
+      const response = await fetch(url);
       const data = await response.json();
 
       if (!response.ok) {
@@ -67,7 +74,10 @@ function TrackFlightContent() {
       setTrackingResult(data.data);
       
       // Update URL without reload
-      router.push(`/flights/track?flightNumber=${flightNumber}&airlineCode=${airlineCode}&date=${flightDate}`, { scroll: false });
+      let newUrl = `/flights/track?flightNumber=${flightNumber}&airlineCode=${airlineCode}&date=${flightDate}`;
+      if (email) newUrl += `&email=${encodeURIComponent(email)}`;
+      if (bookingReference) newUrl += `&reference=${encodeURIComponent(bookingReference)}`;
+      router.push(newUrl, { scroll: false });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -81,29 +91,12 @@ function TrackFlightContent() {
     router.push('/flights/track', { scroll: false });
   };
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   // Tracking Form Sidebar Content Component
   const TrackingSidebarContent = () => (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-20">
-      <div className="bg-gradient-to-r from-indigo-800 to-indigo-800 px-5 py-4">
-        <div className="flex items-center gap-2">
-          <MapPin size={18} className="text-white" />
-          <h3 className="font-bold text-lg text-white">Track New Flight</h3>
-        </div>
-        <p className="text-indigo-100 text-sm mt-1">Enter flight details to track</p>
-      </div>
-      <div className="p-5">
-        <FlightTrackingForm onTrack={handleTrack} loading={loading} error={error} />
+
+      <div>
+        <FlightTrackingForm onTrack={handleTrack} loading={loading} error={error} showVerification={true} />
       </div>
     </div>
   );
@@ -117,9 +110,7 @@ function TrackFlightContent() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-white">Flight Tracking</h1>
-                <p className="text-indigo-100 text-sm mt-1">
-                  {trackingResult ? 'Current flight status' : 'Real-time flight information'}
-                </p>
+                <p className="text-indigo-100 text-sm mt-1">Track your booked flight status and details</p>
               </div>
               {/* Mobile Filter Button - Hamburger Menu */}
               <button
@@ -131,44 +122,6 @@ function TrackFlightContent() {
               </button>
             </div>
           </div>
-          
-          {trackingResult && (
-            <div className="p-4 md:p-6">
-              <div className="flex flex-wrap gap-4 md:gap-6">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <Plane size={16} className="text-indigo-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Flight</p>
-                    <p className="font-semibold text-gray-800 text-sm md:text-base">{trackingResult.flight?.iata}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <Calendar size={16} className="text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Date</p>
-                    <p className="font-semibold text-gray-800 text-sm md:text-base">{formatDate(trackingResult.flight_date)}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    <MapPin size={16} className="text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500">Route</p>
-                    <p className="font-semibold text-gray-800 text-sm md:text-base">
-                      {trackingResult.departure?.iata} → {trackingResult.arrival?.iata}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
@@ -198,10 +151,10 @@ function TrackFlightContent() {
                       <X size={20} />
                     </button>
                   </div>
-                  <FlightTrackingForm onTrack={(airlineCode, flightNumber, flightDate) => {
-                    handleTrack(airlineCode, flightNumber, flightDate);
+                  <FlightTrackingForm onTrack={(airlineCode, flightNumber, flightDate, email, reference) => {
+                    handleTrack(airlineCode, flightNumber, flightDate, email, reference);
                     setIsMobileMenuOpen(false);
-                  }} loading={loading} error={error} />
+                  }} loading={loading} error={error} showVerification={true} />
                 </div>
               </div>
             </>
@@ -216,7 +169,7 @@ function TrackFlightContent() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">No Flight Tracked Yet</h3>
                 <p className="text-gray-500 text-sm">
-                  Enter a flight number on the left to see real-time status, departure and arrival times, gates, and more
+                  Enter your flight number, airline, and departure date to see your booking details, flight status, and more
                 </p>
               </div>
             )}
@@ -231,8 +184,8 @@ function TrackFlightContent() {
                       <Plane size={24} className="text-indigo-600 animate-bounce" />
                     </div>
                   </div>
-                  <p className="text-gray-700 font-semibold mt-6">Tracking Flight...</p>
-                  <p className="text-gray-400 text-sm mt-2">Fetching real-time flight information</p>
+                  <p className="text-gray-700 font-semibold mt-6">Retrieving Booking...</p>
+                  <p className="text-gray-400 text-sm mt-2">Fetching your flight information from our records</p>
                 </div>
               </div>
             )}
@@ -243,7 +196,7 @@ function TrackFlightContent() {
                   <Plane size={32} className="text-red-500" />
                 </div>
                 <p className="text-red-700 font-semibold">{error}</p>
-                <p className="text-red-600 text-sm mt-2">Please check the flight number and date and try again.</p>
+                <p className="text-red-600 text-sm mt-2">Please check your flight details and try again.</p>
               </div>
             )}
 

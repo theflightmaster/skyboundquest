@@ -1,16 +1,12 @@
+// components/PaymentButton.js
 'use client';
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { CreditCard, Lock } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
-export default function PaymentButton({ amount, email, flightData, passengerData }) {
+export default function PaymentButton({ amount, email, passengerData, flightData, keyDetails }) {
   const [loading, setLoading] = useState(false);
-
-  const formattedAmount = amount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
 
   const handlePayment = async () => {
     if (!email) {
@@ -22,14 +18,24 @@ export default function PaymentButton({ amount, email, flightData, passengerData
     const loadingToast = toast.loading('Initializing secure payment...');
     
     try {
+      // Log what we're sending
+      // console.log('Sending to payment API:', {
+      //   email,
+      //   amount,
+      //   passengerData,
+      //   flightData,
+      //   keyDetails,
+      // });
+
       const response = await fetch('/api/payment/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
           amount,
-          flightData,
           passengerData,
+          flightData,
+          keyDetails, // Make sure keyDetails is included
         }),
       });
 
@@ -48,7 +54,7 @@ export default function PaymentButton({ amount, email, flightData, passengerData
         setLoading(false);
       }
     } catch (error) {
-      // console.error('Payment error:', error);
+      console.error('Payment error:', error);
       toast.dismiss(loadingToast);
       toast.error('An error occurred. Please try again.');
       setLoading(false);
@@ -60,7 +66,7 @@ export default function PaymentButton({ amount, email, flightData, passengerData
       <button
         onClick={handlePayment}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-800 to-indigo-800 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:from-blue-800 hover:to-indigo-800 cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold text-lg shadow-md hover:shadow-lg flex items-center justify-center gap-2"
       >
         {loading ? (
           <>
@@ -70,15 +76,10 @@ export default function PaymentButton({ amount, email, flightData, passengerData
         ) : (
           <>
             <CreditCard size={18} />
-            Pay ${formattedAmount} Securely
+            Pay ${amount} Securely
           </>
         )}
       </button>
-      
-      {/* <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
-        <Lock size={12} />
-        <span>256-bit SSL encryption • Secured by Paystack</span>
-      </div> */}
     </div>
   );
 }

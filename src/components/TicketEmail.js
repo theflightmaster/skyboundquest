@@ -156,51 +156,55 @@ export async function TicketEmail({
               justify-content: space-between;
               align-items: center;
               margin: 15px 0;
+              gap: 20px;
             }
             .airport {
               text-align: center;
               flex: 1;
             }
             .airport-code {
-              font-size: 20px;
+              font-size: 28px;
               font-weight: bold;
               color: #1f2937;
+              margin-bottom: 8px;
             }
             .airport-name {
-              font-size: 12px;
+              font-size: 13px;
               color: #6b7280;
               margin-top: 5px;
             }
             .arrow {
-              font-size: 24px;
+              font-size: 32px;
               color: #9ca3af;
               margin: 0 10px;
+              font-weight: bold;
             }
             .flight-time {
-              font-size: 18px;
+              font-size: 24px;
               font-weight: bold;
               color: #1f2937;
-              margin: 5px 0;
+              margin: 8px 0;
             }
             .flight-date {
-              font-size: 12px;
+              font-size: 13px;
               color: #6b7280;
             }
             .info-row {
               display: flex;
               justify-content: space-between;
-              padding: 10px 0;
+              padding: 12px 0;
               border-bottom: 1px solid #e5e7eb;
             }
             .info-row:last-child {
               border-bottom: none;
             }
             .info-label {
-              font-size: 13px;
+              font-size: 14px;
               color: #6b7280;
+              font-weight: 500;
             }
             .info-value {
-              font-size: 13px;
+              font-size: 14px;
               font-weight: 600;
               color: #1f2937;
             }
@@ -233,6 +237,21 @@ export async function TicketEmail({
               border-radius: 6px;
               margin: 20px 0;
             }
+            @media (max-width: 480px) {
+              .flight-route {
+                flex-direction: column;
+                gap: 15px;
+              }
+              .arrow {
+                transform: rotate(90deg);
+              }
+              .airport-code {
+                font-size: 24px;
+              }
+              .flight-time {
+                font-size: 20px;
+              }
+            }
           </style>
         </head>
         <body>
@@ -246,21 +265,20 @@ export async function TicketEmail({
             
             <div class="content">
               <div class="success-section">
-                <h2 class="success-title">Booking Confirmed!</h2>
-                <p style="color: #4b5563;">Hi ${passengerName}, your flight has been successfully booked.</p>
+                <p style="color: #4b5563; font-size: 16px;">Hi ${passengerName}, your flight has been successfully booked.</p>
               </div>
               
               <div class="card">
                 <div class="info-row">
-                  <span class="info-label">Booking Reference</span>
+                  <span class="info-label">Booking Reference:</span>
                   <span class="info-value">${bookingReference}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Flight Number</span>
+                  <span class="info-label">Flight Number:</span>
                   <span class="info-value">${flightNumber}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Airline</span>
+                  <span class="info-label">Airline:</span>
                   <span class="info-value">${airline}</span>
                 </div>
               </div>
@@ -268,15 +286,17 @@ export async function TicketEmail({
               <div class="flight-details">
                 <div class="flight-route">
                   <div class="airport">
-                    <div class="airport-code">${departureAirport.split(' - ')[0]}</div>
+                    <div class="airport-code">${departureAirport.split(' - ')[0] || departureAirport}</div>
                     <div class="flight-time">${departureTime}</div>
                     <div class="flight-date">${departureDate}</div>
+                    <div class="airport-name">${departureAirport.split(' - ')[1] || ''}</div>
                   </div>
                   <div class="arrow">→</div>
                   <div class="airport">
-                    <div class="airport-code">${arrivalAirport.split(' - ')[0]}</div>
+                    <div class="airport-code">${arrivalAirport.split(' - ')[0] || arrivalAirport}</div>
                     <div class="flight-time">${arrivalTime}</div>
                     <div class="flight-date">${departureDate}</div>
+                    <div class="airport-name">${arrivalAirport.split(' - ')[1] || ''}</div>
                   </div>
                 </div>
                 <hr style="margin: 15px 0;" />
@@ -284,14 +304,14 @@ export async function TicketEmail({
                   <span class="info-label">Duration</span>
                   <span class="info-value">${duration}</span>
                 </div>
-                <div class="info-row">
-                  <span class="info-label">Terminal</span>
-                  <span class="info-value">${terminal}</span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">Gate</span>
-                  <span class="info-value">${gate}</span>
-                </div>
+                // <div class="info-row">
+                //   <span class="info-label">Terminal</span>
+                //   <span class="info-value">${terminal}</span>
+                // </div>
+                // <div class="info-row">
+                //   <span class="info-label">Gate</span>
+                //   <span class="info-value">${gate}</span>
+                // </div>
               </div>
               
               <hr />
@@ -306,15 +326,15 @@ export async function TicketEmail({
               <hr />
               
               <div style="text-align: center;">
-                <p style="margin: 0 0 5px 0;"><strong>Need Assistance?</strong></p>
-                <p style="margin: 0;">
+                <p style="margin: 0 0 5px 0; font-size: 14px;"><strong>Need Assistance?</strong></p>
+                <p style="margin: 0; font-size: 13px;">
                   Contact us at <a href="mailto:support@skyboundquest.com" style="color: #2563eb; text-decoration: none;">support@skyboundquest.com</a>
                 </p>
               </div>
             </div>
             
             <div class="footer">
-              <p style="margin: 0 0 5px 0;">Thank you for choosing Skyboundquest!</p>
+              <p style="margin: 0 0 5px 0; font-size: 12px;">Thank you for choosing Skyboundquest!</p>
               <p style="margin: 0; font-size: 11px;">© 2025 Skyboundquest. All rights reserved.</p>
             </div>
           </div>

@@ -1,14 +1,150 @@
+// components/FlightCard.js
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { Clock, ArrowRight, Plane, Briefcase, Calendar, Armchair, Repeat, Tag, Building, Luggage } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 
 export default function FlightCard({ flight }) {
   const router = useRouter();
 
+  // Helper functions for date formatting - defined once at the top
+  const formatTimeSafe = (dateString) => {
+  if (!dateString) return 'N/A';
+  try {
+    const date = new Date(dateString);
+    if (!isValid(date)) return 'N/A';
+    return format(date, 'h:mm a'); // Returns "2:30 PM" instead of "14:30"
+  } catch {
+    return 'N/A';
+  }
+};
+  
+  const formatDateSafe = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (!isValid(date)) return 'N/A';
+      return format(date, 'MMM dd, yyyy');
+    } catch {
+      return 'N/A';
+    }
+  };
+  
+  const formatFullDateSafe = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (!isValid(date)) return 'N/A';
+      return format(date, 'yyyy-MM-dd');
+    } catch {
+      return 'N/A';
+    }
+  };
+
+  const formatDuration = (minutes) => {
+    if (!minutes || isNaN(minutes)) return 'N/A';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}m`;
+  };
+
   const handleSelect = () => {
-    const encoded = encodeURIComponent(JSON.stringify(flight));
+    // Extract ALL flight details properly
+    const isRoundTrip = flight.type === 'round_trip';
+    const primaryFlight = isRoundTrip ? flight.outbound : flight;
+    
+    // Get departure and arrival times
+    const departureScheduled = primaryFlight?.departure?.scheduled;
+    const arrivalScheduled = primaryFlight?.arrival?.scheduled;
+    
+    // Create a complete flight data object
+    const selectedFlight = {
+      id: flight.id,
+      type: flight.type || 'one_way',
+      
+      // Flight identification
+      flightNumber: primaryFlight?.flight?.iata || flight.flight?.iata || 'N/A',
+      airlineName: primaryFlight?.airline?.name || flight.airline?.name || 'Airline',
+      airlineCode: primaryFlight?.airline?.iata || flight.airline?.iata,
+      
+      // Departure details
+      departure: {
+        iata: primaryFlight?.departure?.iata || flight.departure?.iata || 'N/A',
+        airport: primaryFlight?.departure?.airport || flight.departure?.airport || '',
+        scheduled: departureScheduled,
+        time: formatTimeSafe(departureScheduled),
+        date: formatDateSafe(departureScheduled),
+        fullDate: formatFullDateSafe(departureScheduled),
+        terminal: primaryFlight?.departure?.terminal || flight.departure?.terminal || 'TBD',
+        gate: primaryFlight?.departure?.gate || flight.departure?.gate || 'TBD',
+      },
+      
+      // Arrival details
+      arrival: {
+        iata: primaryFlight?.arrival?.iata || flight.arrival?.iata || 'N/A',
+        airport: primaryFlight?.arrival?.airport || flight.arrival?.airport || '',
+        scheduled: arrivalScheduled,
+        time: formatTimeSafe(arrivalScheduled),
+        date: formatDateSafe(arrivalScheduled),
+        fullDate: formatFullDateSafe(arrivalScheduled),
+      },
+      
+      // Flight metrics
+      duration: primaryFlight?.duration || flight.duration || 'N/A',
+      duration_minutes: primaryFlight?.duration_minutes || flight.duration_minutes,
+      stops: primaryFlight?.stops || flight.stops || 0,
+      cabin_class: primaryFlight?.cabin_class || flight.cabin_class || 'Economy',
+      
+      // Price
+      price: {
+        amount: isRoundTrip ? flight.total_price?.amount : flight.price?.amount,
+        currency: 'USD',
+      },
+      
+      // For round-trip
+      outbound: flight.outbound ? {
+        ...flight.outbound,
+        departure: {
+          ...flight.outbound.departure,
+          time: formatTimeSafe(flight.outbound.departure?.scheduled),
+          date: formatDateSafe(flight.outbound.departure?.scheduled),
+          fullDate: formatFullDateSafe(flight.outbound.departure?.scheduled),
+        },
+        arrival: {
+          ...flight.outbound.arrival,
+          time: formatTimeSafe(flight.outbound.arrival?.scheduled),
+          date: formatDateSafe(flight.outbound.arrival?.scheduled),
+          fullDate: formatFullDateSafe(flight.outbound.arrival?.scheduled),
+        },
+      } : null,
+      
+      return: flight.return ? {
+        ...flight.return,
+        departure: {
+          ...flight.return.departure,
+          time: formatTimeSafe(flight.return.departure?.scheduled),
+          date: formatDateSafe(flight.return.departure?.scheduled),
+          fullDate: formatFullDateSafe(flight.return.departure?.scheduled),
+        },
+        arrival: {
+          ...flight.return.arrival,
+          time: formatTimeSafe(flight.return.arrival?.scheduled),
+          date: formatDateSafe(flight.return.arrival?.scheduled),
+          fullDate: formatFullDateSafe(flight.return.arrival?.scheduled),
+        },
+      } : null,
+    };
+    
+    // Log for debugging
+    // console.log('Selected Flight Data:', {
+    //   flightNumber: selectedFlight.flightNumber,
+    //   departureTime: selectedFlight.departure.time,
+    //   departureDate: selectedFlight.departure.date,
+    //   arrivalTime: selectedFlight.arrival.time,
+    // });
+    
+    const encoded = encodeURIComponent(JSON.stringify(selectedFlight));
     router.push(`/flights/${flight.id}?flight=${encoded}`);
   };
 
@@ -29,38 +165,19 @@ export default function FlightCard({ flight }) {
     };
   };
 
-  // Format duration
-  const formatDuration = (minutes) => {
-    if (!minutes) return 'N/A';
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  };
-
-  // Format date
-  const formatTime = (dateString) => {
-    if (!dateString) return '--:--';
-    return format(new Date(dateString), 'HH:mm');
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return format(new Date(dateString), 'MMM dd, yyyy');
-  };
-
   // Round trip display
   if (flight.type === 'round_trip') {
     const outbound = flight.outbound;
     const returnFlight = flight.return;
     const cabinBadge = getCabinBadge(flight.cabin_class);
     
-    const outboundDepTime = formatTime(outbound.departure?.scheduled);
-    const outboundArrTime = formatTime(outbound.arrival?.scheduled);
-    const outboundDate = formatDate(outbound.departure?.scheduled);
+    const outboundDepTime = formatTimeSafe(outbound.departure?.scheduled);
+    const outboundArrTime = formatTimeSafe(outbound.arrival?.scheduled);
+    const outboundDate = formatDateSafe(outbound.departure?.scheduled);
     
-    const returnDepTime = formatTime(returnFlight?.departure?.scheduled);
-    const returnArrTime = formatTime(returnFlight?.arrival?.scheduled);
-    const returnDate = formatDate(returnFlight?.departure?.scheduled);
+    const returnDepTime = formatTimeSafe(returnFlight?.departure?.scheduled);
+    const returnArrTime = formatTimeSafe(returnFlight?.arrival?.scheduled);
+    const returnDate = formatDateSafe(returnFlight?.departure?.scheduled);
 
     return (
       <div className="group bg-white rounded-xl md:rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-indigo-200">
@@ -216,9 +333,9 @@ export default function FlightCard({ flight }) {
   }
 
   // One-way display
-  const depTime = formatTime(flight.departure?.scheduled);
-  const arrTime = formatTime(flight.arrival?.scheduled);
-  const flightDate = formatDate(flight.departure?.scheduled);
+  const depTime = formatTimeSafe(flight.departure?.scheduled);
+  const arrTime = formatTimeSafe(flight.arrival?.scheduled);
+  const flightDate = formatDateSafe(flight.departure?.scheduled);
   const cabinBadge = getCabinBadge(flight.cabin_class);
 
   return (
@@ -281,13 +398,6 @@ export default function FlightCard({ flight }) {
             <p className="hidden md:block text-xs text-gray-400 mt-1">{flight.arrival.airport?.split(',')[0]}</p>
           </div>
         </div>
-
-        {/* Flight Number Display */}
-        {/* <div className="mt-3 pt-2 border-t border-gray-100 text-center">
-          <p className="text-xs text-gray-500">
-            Flight Number: <span className="font-mono font-semibold text-gray-700">{flight.flight.iata}</span>
-          </p>
-        </div> */}
 
         {/* Price and Action */}
         <div className="mt-3 pt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

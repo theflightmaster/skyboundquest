@@ -11,13 +11,6 @@ import { useRouter } from 'next/navigation';
 export default function Home() {
   const router = useRouter();
 
-  const handleTrack = (airlineCode, flightNumber, flightDate) => {
-    // Directly use the airline code and flight number from the form
-    if (airlineCode && flightNumber && flightDate) {
-      router.push(`/flights/track?flightNumber=${flightNumber}&airlineCode=${airlineCode}&date=${flightDate}`);
-    }
-  };
-
   return (
     <div>
       {/* Hero Section with Background Image */}
@@ -88,10 +81,10 @@ export default function Home() {
       <section id="track-flight" className="py-20 bg-gradient-to-br from-gray-50 via-white to-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <div className="inline-flex items-center gap-2 bg-indigo-100 rounded-full px-4 py-2 mb-4">
+            {/* <div className="inline-flex items-center gap-2 bg-indigo-100 rounded-full px-4 py-2 mb-4">
               <MapPin size={18} className="text-indigo-600" />
               <span className="text-indigo-600 text-sm font-medium">Real-Time Tracking</span>
-            </div>
+            </div> */}
             <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
               Track Your Flight
             </h2>
@@ -101,7 +94,7 @@ export default function Home() {
           </div>
 
           <div className="max-w-5xl mx-auto">
-            <FlightTrackingForm onTrack={handleTrack} loading={false} error={null} />
+            <FlightTrackingForm />
           </div>
         </div>
       </section>

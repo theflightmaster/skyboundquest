@@ -1,10 +1,11 @@
+// app/flights/[id]/page.js
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import BookingForm from '@/components/BookingForm';
 import { Plane, ArrowLeft } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import Link from 'next/link';
 import Footer from '@/components/Footer';
 
@@ -17,19 +18,38 @@ function FlightDetails() {
   const flightId = params.id;
   const flightDataParam = searchParams.get('flight');
 
+  // Helper function to safely format dates
+  const safeFormatDate = (dateString, formatString, fallback = 'N/A') => {
+    if (!dateString) return fallback;
+    try {
+      const date = new Date(dateString);
+      if (!isValid(date)) return fallback;
+      return format(date, formatString);
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return fallback;
+    }
+  };
+
   useEffect(() => {
+    // Prioritize the flight data passed from FlightCard
     if (flightDataParam) {
       try {
         const parsedFlight = JSON.parse(decodeURIComponent(flightDataParam));
+        // console.log('Flight data received from FlightCard:', parsedFlight);
         setFlight(parsedFlight);
         setLoading(false);
       } catch (error) {
+        console.error('Error parsing flight data from URL:', error);
+        // Only fetch if parsing fails
         fetchFlightDetails();
       }
     } else {
+      // Only fetch if no data was passed in URL
+      // console.log('No flight data in URL, fetching from API');
       fetchFlightDetails();
     }
-  }, [flightId]);
+  }, [flightId, flightDataParam]);
 
   const fetchFlightDetails = async () => {
     try {
@@ -37,7 +57,7 @@ function FlightDetails() {
       const data = await response.json();
       setFlight(data.data);
     } catch (error) {
-      // console.error('Error fetching flight details:', error);
+      console.error('Error fetching flight details:', error);
     } finally {
       setLoading(false);
     }
@@ -83,16 +103,58 @@ function FlightDetails() {
     );
   }
 
+  // Determine the primary flight data (for one-way or round-trip)
+  const isRoundTrip = flight.type === 'round_trip';
+  const primaryFlight = isRoundTrip ? flight.outbound : flight;
+  
+  // Use the already formatted data from FlightCard if available
+  // Otherwise, format it safely
+  const departureTime = flight.departure?.time || 
+                        primaryFlight?.departure?.time || 
+                        safeFormatDate(primaryFlight?.departure?.scheduled || flight.departure?.scheduled, 'HH:mm', '--:--');
+  
+  const arrivalTime = flight.arrival?.time || 
+                      primaryFlight?.arrival?.time || 
+                      safeFormatDate(primaryFlight?.arrival?.scheduled || flight.arrival?.scheduled, 'HH:mm', '--:--');
+  
+  const departureDate = flight.departure?.date || 
+                        primaryFlight?.departure?.date || 
+                        safeFormatDate(primaryFlight?.departure?.scheduled || flight.departure?.scheduled || flight.flight_date, 'EEE, MMM dd, yyyy', 'Date not available');
+  
+  // Get duration
+  let durationFormatted = flight.duration || primaryFlight?.duration || 'N/A';
+  if (typeof durationFormatted === 'number' || !isNaN(parseInt(durationFormatted))) {
+    const durationNum = typeof durationFormatted === 'number' ? durationFormatted : parseInt(durationFormatted);
+    if (!isNaN(durationNum)) {
+      const hours = Math.floor(durationNum / 60);
+      const minutes = durationNum % 60;
+      durationFormatted = `${hours}h ${minutes}m`;
+    }
+  }
+  
   // Prepare key details for the booking form
   const keyDetails = {
-    duration: `${Math.floor(flight.duration / 60)}h ${flight.duration % 60}m`,
-    baggage: flight.arrival?.baggage || '1 x 23kg',
-    carryon: '7kg',
-    stops: flight.stops,
-    departureTime: format(new Date(flight.departure?.scheduled), 'HH:mm'),
-    arrivalTime: format(new Date(flight.arrival?.scheduled), 'HH:mm'),
-    departureDate: format(new Date(flight.flight_date), 'EEE, MMM dd, yyyy'),
+    duration: durationFormatted,
+    baggage: flight.arrival?.baggage || flight.baggage || '1 x 23kg',
+    carryon: flight.carryon || '7kg',
+    stops: primaryFlight?.stops || flight.stops || 0,
+    departureTime: departureTime,
+    arrivalTime: arrivalTime,
+    departureDate: departureDate,
+    flightNumber: flight.flightNumber || primaryFlight?.flight?.iata || flight.flight?.iata || 'N/A',
+    airline: flight.airlineName || primaryFlight?.airline?.name || flight.airline?.name || 'Airline',
+    departureAirport: flight.departure?.iata || primaryFlight?.departure?.iata || 'N/A',
+    arrivalAirport: flight.arrival?.iata || primaryFlight?.arrival?.iata || 'N/A',
+    terminal: flight.departure?.terminal || primaryFlight?.departure?.terminal || 'TBD',
+    gate: flight.departure?.gate || primaryFlight?.departure?.gate || 'TBD',
+    airlineCode: flight.airlineCode || primaryFlight?.airline?.iata,
+    departureAirportFull: flight.departure?.airport || primaryFlight?.departure?.airport || '',
+    arrivalAirportFull: flight.arrival?.airport || primaryFlight?.arrival?.airport || '',
+    cabinClass: flight.cabin_class || primaryFlight?.cabin_class || 'Economy',
+    price: flight.price?.amount || primaryFlight?.price?.amount,
   };
+
+  // console.log('Flight details prepared for booking form:', keyDetails);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-8 px-4">

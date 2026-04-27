@@ -94,7 +94,7 @@ function CancelContent() {
             <div className="space-y-3">
               <Link
                 href="/"
-                className="flex items-center justify-center gap-2 w-full bg-blue-600 text-white py-3 rounded-xl hover:bg-blue-700 transition-all font-medium"
+                className="flex items-center justify-center gap-2 w-full bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 text-white py-3 rounded-xl hover:bg-blue-700 transition-all font-medium"
               >
                 <RefreshCw size={18} />
                 Try Booking Again
@@ -102,7 +102,7 @@ function CancelContent() {
               
               <Link
                 href="/flights/search"
-                className="flex items-center justify-center gap-2 w-full border-2 border-blue-600 text-blue-600 py-3 rounded-xl hover:bg-blue-50 transition-all font-medium"
+                className="flex items-center justify-center gap-2 w-full border-2 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 text-blue-600 py-3 rounded-xl hover:bg-blue-50 transition-all font-medium"
               >
                 <Plane size={18} />
                 Browse More Flights
