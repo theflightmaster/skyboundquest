@@ -240,17 +240,17 @@ export async function GET(request) {
 
       const emailResult = await sendTicketEmail(emailData);
 
-      if (emailResult.success) {
-        // console.log('✅ Email sent successfully to:', bookingData.passenger.email);
-        // ========== DATABASE UPDATE - COMMENTED OUT ==========
-        // await Booking.findOneAndUpdate(
-        //   { bookingReference: reference },
-        //   { emailSent: true, emailSentAt: new Date() }
-        // );
-        // ========== END OF COMMENTED OUT SECTION ==========
-      } else {
-        // console.error('❌ Failed to send email:', emailResult.error);
-      }
+      // if (emailResult.success) {
+      //   console.log('✅ Email sent successfully to:', bookingData.passenger.email);
+      //   ========== DATABASE UPDATE - COMMENTED OUT ==========
+      //   await Booking.findOneAndUpdate(
+      //     { bookingReference: reference },
+      //     { emailSent: true, emailSentAt: new Date() }
+      //   );
+      //   ========== END OF COMMENTED OUT SECTION ==========
+      // } else {
+      //   console.error('❌ Failed to send email:', emailResult.error);
+      // }
     } catch (emailError) {
       // console.error('Email sending error:', emailError);
     }
