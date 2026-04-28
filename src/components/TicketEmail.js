@@ -67,7 +67,7 @@ export async function TicketEmail({
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Your Flight Ticket Confirmation - ${reference}</title>
+          <title>Your Flight Ticket Confirmation - ${bookingReference}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif;

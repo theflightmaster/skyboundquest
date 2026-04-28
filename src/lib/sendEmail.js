@@ -62,7 +62,7 @@ export async function sendTicketEmail({
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Your Flight Ticket Confirmation - ${flightNumber}</title>
+          <title>Your Flight Ticket Confirmation - ${bookingReference}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif;
@@ -262,7 +262,7 @@ export async function sendTicketEmail({
     const { data, error } = await resend.emails.send({
       from: 'Skyboundquest <noreply@skyboundquest.com>',
       to: [to],
-      subject: `Your Flight Ticket Confirmation - ${flightNumber}`,
+      subject: `Your Flight Ticket Confirmation - ${bookingReference}`,
       html: emailHtml,
       attachments: [
         {
