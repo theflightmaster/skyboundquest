@@ -1,21 +1,22 @@
 // app/api/payment/verify/route.js
 import { NextResponse } from 'next/server';
 import { sendTicketEmail } from '@/lib/sendEmail';
+import Booking from '@/models/Booking';
+import dbConnect from '@/lib/mongodb';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
 export async function GET(request) {
   try {
+    await dbConnect();
+    
     const { searchParams } = new URL(request.url);
     const reference = searchParams.get('reference');
     
     if (!reference) {
-      // console.error('No reference provided');
       return NextResponse.redirect(`${BASE_URL}/payment/cancel?error=missing_reference`);
     }
-
-    // console.log('Verifying payment for reference:', reference);
 
     // Verify payment with Paystack
     const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
@@ -27,17 +28,12 @@ export async function GET(request) {
     });
 
     const data = await response.json();
-    // console.log('Paystack verification response:', data.status);
 
     if (!data.status || data.data.status !== 'success') {
-      // console.error('Payment verification failed:', data.message);
       return NextResponse.redirect(`${BASE_URL}/payment/cancel?error=payment_failed`);
     }
 
-    // Payment is successful
-    // console.log('Payment successful! Processing booking...');
-
-    // Extract metadata
+    // Payment is successful - extract metadata
     const metadata = data.data.metadata;
     let flightData = {}, passengerData = {}, keyDetails = {};
 
@@ -46,11 +42,8 @@ export async function GET(request) {
       passengerData = metadata?.passenger_data ? JSON.parse(metadata.passenger_data) : {};
       keyDetails = metadata?.key_details ? JSON.parse(metadata.key_details) : {};
     } catch (error) {
-      // console.error('Error parsing metadata:', error);
+      console.error('Error parsing metadata:', error);
     }
-
-    // console.log('Extracted keyDetails:', keyDetails);
-    // console.log('Extracted flightData:', flightData);
 
     // Extract flight number - remove airline code if present
     let rawFlightNumber = keyDetails.flightNumber || flightData?.flightNumber || flightData?.flight?.iata || 'N/A';
@@ -71,20 +64,13 @@ export async function GET(request) {
     
     // Construct full flight number for display
     const fullFlightNumber = `${airlineCode}${cleanFlightNumber}`;
-    
-    // console.log('Flight number processing:', {
-    //   original: rawFlightNumber,
-    //   airlineCode: airlineCode,
-    //   cleanNumber: cleanFlightNumber,
-    //   fullDisplay: fullFlightNumber
-    // });
 
-    // Prepare booking data for email
+    // Prepare booking data for database
     const bookingData = {
       bookingReference: reference,
       transactionId: data.data.id.toString(),
-      amount: data.data.amount / 100,
-      currency: data.data.currency,
+      paymentStatus: 'success',
+      amount: flightData?.price?.amount,
       paidAt: new Date(data.data.paid_at),
       passenger: {
         fullName: passengerData.fullName || 'N/A',
@@ -95,7 +81,6 @@ export async function GET(request) {
       },
       flight: {
         flightNumber: cleanFlightNumber,
-        fullFlightNumber: fullFlightNumber,
         airline: {
           name: keyDetails.airline || flightData?.airline?.name || flightData?.airlineName || 'Skyboundquest Air',
           iata: airlineCode,
@@ -130,6 +115,7 @@ export async function GET(request) {
       },
       flightData: flightData,
       bookingDate: new Date(),
+      emailSent: false,
     };
 
     // Add return flight data if round trip
@@ -146,7 +132,6 @@ export async function GET(request) {
       
       bookingData.returnFlight = {
         flightNumber: returnCleanFlightNumber,
-        fullFlightNumber: `${airlineCode}${returnCleanFlightNumber}`,
         airline: {
           name: flightData.return.airline?.name || 'N/A',
           iata: airlineCode,
@@ -174,6 +159,16 @@ export async function GET(request) {
       };
     }
 
+    // Save booking to database
+    try {
+      const booking = new Booking(bookingData);
+      await booking.save();
+      console.log('Booking saved successfully:', booking.bookingReference);
+    } catch (dbError) {
+      console.error('Error saving booking to database:', dbError);
+      // Continue with the flow even if DB save fails - we don't want to block the user
+    }
+
     // Send email with ticket
     try {
       const emailData = {
@@ -194,8 +189,16 @@ export async function GET(request) {
       };
 
       await sendTicketEmail(emailData);
+      
+      // Update email sent status in database if booking was saved
+      if (bookingData._id) {
+        await Booking.updateOne(
+          { bookingReference: reference },
+          { emailSent: true, emailSentAt: new Date() }
+        );
+      }
     } catch (emailError) {
-      // console.error('Email sending error:', emailError);
+      console.error('Email sending error:', emailError);
     }
 
     // Redirect to success page
@@ -203,11 +206,10 @@ export async function GET(request) {
     successUrl.searchParams.set('reference', reference);
     successUrl.searchParams.set('amount', (data.data.amount / 100).toFixed(2));
     
-    // console.log('Redirecting to success URL:', successUrl.toString());
     return NextResponse.redirect(successUrl.toString());
     
   } catch (error) {
-    // console.error('Payment verification error:', error);
+    console.error('Payment verification error:', error);
     return NextResponse.redirect(`${BASE_URL}/payment/cancel?error=verification_error`);
   }
 }

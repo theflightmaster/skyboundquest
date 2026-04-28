@@ -312,7 +312,11 @@ export default function FlightCard({ flight }) {
               {flight.total_price?.amount ? (
                 <>
                   <p className="text-xl md:text-2xl font-bold text-indigo-600">
-                    ${flight.total_price.amount.toFixed(2)}
+                    ${flight.total_price.amount.
+                        toLocaleString('en-US', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                      })}
                   </p>
                   <p className="text-xs text-gray-400">total for {flight.outbound.airline.name}</p>
                 </>
@@ -415,7 +419,10 @@ export default function FlightCard({ flight }) {
             {flight.price?.amount ? (
               <>
                 <p className="text-xl md:text-2xl font-bold text-indigo-600">
-                  ${flight.price.amount.toFixed(2)}
+                  ${flight.price.amount. toLocaleString('en-US', { 
+                    minimumFractionDigits: 2, 
+                    maximumFractionDigits: 2 
+                  })}
                 </p>
                 <p className="text-xs text-gray-400">per passenger</p>
               </>

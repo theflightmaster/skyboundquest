@@ -63,19 +63,19 @@ function SuccessContent() {
           <div className="p-8">
             {/* Booking Reference */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div className="text-center md:text-left">
-                  <p className="text-sm text-blue-600 font-medium flex items-center gap-2 justify-center md:justify-start">
-                    <Receipt size={14} />
-                    Booking Reference
+              <div className="flex flex-col items-center gap-4">
+                <div className="text-center flex flex-row items-center gap-2">
+                  <p className="text-2xl font-mono font-bold text-blue-900 flex items-center gap-2 justify-center md:justify-start">
+                    {/* <Receipt size={14} /> */}
+                    Booking Reference:
                   </p>
                   <p className="text-2xl font-mono font-bold text-blue-900">{bookingRef}</p>
                 </div>
-                <div className="w-px h-12 bg-blue-200 hidden md:block"></div>
-                <div className="text-center md:text-right">
+                {/* <div className="w-px h-12 bg-blue-200 hidden md:block"></div> */}
+                {/* <div className="text-center md:text-right">
                   <p className="text-sm text-blue-600 font-medium">Total Amount Paid</p>
                   <p className="text-2xl font-bold text-blue-900">${(amount || 0).toLocaleString()}</p>
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -101,7 +101,6 @@ function SuccessContent() {
             {/* Email Notice */}
             <div className="mt-6 pt-6 border-t text-center">
               <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <Mail size={16} />
                 <span>A confirmation email has been sent to your registered email address</span>
               </div>
             </div>

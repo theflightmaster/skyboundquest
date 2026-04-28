@@ -1,12 +1,54 @@
-// app/api/payment/initialize/route.js
 import { NextResponse } from 'next/server';
-import crypto from 'crypto';
+import dbConnect from '@/lib/mongodb';
+import Booking from '@/models/Booking';
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
 
+// Helper function to generate unique alphanumeric reference
+async function generateUniqueReference() {
+  await dbConnect(); // Ensure database connection
+  
+  let isUnique = false;
+  let reference = '';
+  let attempts = 0;
+  const maxAttempts = 10;
+  
+  while (!isUnique && attempts < maxAttempts) {
+    attempts++;
+    
+    // Generate 6 character alphanumeric string
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    reference = result;
+    
+    // Check if reference exists in database
+    const existingBooking = await Booking.findOne({ bookingReference: reference }).select('_id');
+    if (!existingBooking) {
+      isUnique = true;
+    }
+  }
+  
+  if (!isUnique) {
+    // Fallback: Use timestamp-based reference
+    const timestamp = Date.now().toString(36).toUpperCase();
+    reference = timestamp.substring(0, 6);
+    while (reference.length < 6) {
+      reference = '0' + reference;
+    }
+  }
+  
+  return reference;
+}
+
 export async function POST(request) {
   try {
+    // Connect to database first
+    await dbConnect();
+    
     const body = await request.json();
     const { email, amount, passengerData, flightData, keyDetails } = body;
 
@@ -17,8 +59,8 @@ export async function POST(request) {
       );
     }
 
-    // Generate unique reference
-    const reference = `FLIGHT-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    // Generate unique 6-character alphanumeric reference
+    const reference = await generateUniqueReference();
 
     // Ensure keyDetails has all required fields
     const enrichedKeyDetails = {
@@ -37,8 +79,6 @@ export async function POST(request) {
       departureAirportFull: keyDetails?.departureAirportFull || flightData?.departure?.airport || '',
       arrivalAirportFull: keyDetails?.arrivalAirportFull || flightData?.arrival?.airport || '',
     };
-
-    // console.log('Payment Initialize - Enriched keyDetails:', enrichedKeyDetails);
 
     const paymentData = {
       email,

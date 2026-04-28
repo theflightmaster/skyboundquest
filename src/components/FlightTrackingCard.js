@@ -1,242 +1,235 @@
 'use client';
 
-import { Plane, Calendar, Clock, MapPin, Ticket } from 'lucide-react';
+import { Plane, Calendar, Clock, MapPin, Users, ArrowRight, RotateCcw, Ticket, User, Phone, Mail } from 'lucide-react';
 
 export default function FlightTrackingCard({ trackingResult, onReset }) {
-  // Helper function to format time
+  const { flight, passenger, booking, returnFlight, transactionId } = trackingResult;
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
   const formatTime = (timeString) => {
-    if (!timeString || timeString === '--:--' || timeString === 'N/A') {
-      return '--:--';
-    }
-    
-    // If it's already in HH:MM format, return as is
-    if (/^\d{1,2}:\d{2}$/.test(timeString)) {
-      return timeString;
-    }
-    
-    try {
-      // Try to parse as date string
-      const date = new Date(timeString);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      }
-    } catch (e) {
-      // If parsing fails, return original
-      return timeString;
-    }
-    
+    if (!timeString) return 'N/A';
     return timeString;
   };
 
-  // Helper function to format date
-  const formatDate = (dateString) => {
-    if (!dateString || dateString === 'N/A') {
-      return 'Date not available';
-    }
-    
-    try {
-      const date = new Date(dateString);
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
-        });
-      }
-    } catch (e) {
-      return dateString;
-    }
-    
-    return dateString;
+  const formatDateTime = (dateString, timeString) => {
+    if (!dateString && !timeString) return 'N/A';
+    return `${formatDate(dateString)} at ${formatTime(timeString)}`;
   };
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'active': return 'bg-green-100 text-green-700 border-green-200';
-      case 'landed': return 'bg-indigo-100 text-indigo-700 border-indigo-200';
-      case 'delayed': return 'bg-red-100 text-red-700 border-red-200';
-      case 'cancelled': return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'scheduled': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'completed': return 'bg-gray-100 text-gray-700 border-gray-200';
-      case 'today': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'upcoming': return 'bg-purple-100 text-purple-700 border-purple-200';
-      default: return 'bg-green-100 text-green-700 border-green-200';
-    }
-  };
-
-  const getStatusText = (status) => {
-    switch(status) {
-      case 'active': return 'In Air';
-      case 'landed': return 'Landed';
-      case 'delayed': return 'Delayed';
-      case 'cancelled': return 'Cancelled';
-      case 'scheduled': return 'Scheduled';
-      case 'completed': return 'Completed';
-      case 'today': return 'Today\'s Flight';
-      case 'upcoming': return 'Upcoming Flight';
-      default: return 'Confirmed';
-    }
-  };
-
-  // Format times and dates for display
-  const departureTime = formatTime(trackingResult.departure?.scheduled || trackingResult.departure?.time);
-  const arrivalTime = formatTime(trackingResult.arrival?.scheduled || trackingResult.arrival?.time);
-  
-  // Format departure and arrival dates
-  const departureDate = formatDate(trackingResult.departure?.date || trackingResult.flight_date);
-  const arrivalDate = formatDate(trackingResult.arrival?.date || trackingResult.flight_date);
-  
-  const formattedDate = formatDate(trackingResult.flight_date);
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 animate-fadeIn">
-      <div className="bg-gradient-to-r from-indigo-800 to-indigo-800 px-6 py-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div>
-              <p className="text-xs text-indigo-100">Flight Status</p>
-              <p className="text-2xl font-bold text-white">{trackingResult.flight?.iata}</p>
-              <p className="text-sm text-indigo-100">{trackingResult.airline?.name}</p>
-            </div>
+    <div className="w-full bg-gradient-to-br from-white via-gray-50 to-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-800 to-indigo-800 px-6 md:px-8 py-6 text-white">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold">Flight Details</h2>
+            <p className="text-indigo-100 mt-1">Booking Reference: {booking.reference}</p>
           </div>
-          <div className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(trackingResult.flight_status)}`}>
-            {getStatusText(trackingResult.flight_status)}
-          </div>
+          <button
+            onClick={onReset}
+            className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 text-sm font-medium"
+          >
+            <RotateCcw size={16} />
+            Track Another
+          </button>
         </div>
       </div>
 
-      <div className="p-6 md:p-8">
-        {/* Booking Reference */}
-        {trackingResult.booking_reference && (
-          <div className="mb-6 bg-indigo-50 rounded-xl p-4 border border-indigo-200">
+      <div className="p-6 md:p-8 space-y-6">
+        {/* Passenger Information */}
+        <div className="bg-gradient-to-r from-indigo-50 to-pink-50 rounded-2xl p-5 border border-indigo-100">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="font-bold text-gray-800">Passenger Information</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex items-center gap-2">
-              <Ticket size={18} className="text-indigo-600" />
               <div>
-                <p className="text-xs text-indigo-600 font-semibold">BOOKING REFERENCE</p>
-                <p className="text-lg font-bold text-indigo-900">{trackingResult.booking_reference}</p>
+                <p className="text-xs text-gray-500">Full Name</p>
+                <p className="font-medium text-gray-800">{passenger.fullName}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div>
+                <p className="text-xs text-gray-500">Email</p>
+                <p className="font-medium text-gray-800">{passenger.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div>
+                <p className="text-xs text-gray-500">Phone</p>
+                <p className="font-medium text-gray-800">{passenger.phone}</p>
               </div>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Passenger Name */}
-        {trackingResult.passenger_name && (
-          <div className="mb-6 bg-gray-50 rounded-xl p-4">
-            <p className="text-xs text-gray-500 font-semibold">PASSENGER</p>
-            <p className="text-lg font-bold text-gray-800">{trackingResult.passenger_name}</p>
-          </div>
-        )}
-
-        {/* Flight Route */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="text-center flex-1">
-            <p className="text-3xl font-bold text-gray-800">{departureTime}</p>
-            <p className="text-lg font-semibold text-gray-600 mt-1">{trackingResult.departure?.iata}</p>
-            <p className="text-sm text-gray-500 mt-1">{departureDate}</p>
-            <p className="text-sm text-gray-400 mt-1">{trackingResult.departure?.airport}</p>
-            {/* {trackingResult.departure?.terminal && (
-              <p className="text-xs text-indigo-600 mt-2">Terminal: {trackingResult.departure.terminal}</p>
-            )}
-            {trackingResult.departure?.gate && (
-              <p className="text-xs text-indigo-600">Gate: {trackingResult.departure.gate}</p>
-            )} */}
-          </div>
+        {/* Flight Information */}
+        <div>
+          {/* <div className="flex items-center gap-2 mb-4">
+            <h3 className="font-bold text-gray-800">Flight Information</h3>
+          </div> */}
           
-          <div className="flex-1 px-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t-2 border-dashed border-gray-300"></div>
+          <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200">
+            {/* Airline and Flight Number */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+              <div>
+                <p className="text-sm text-gray-500">Airline</p>
+                <p className="font-bold text-gray-800">{flight.airline.name} ({flight.airline.iata})</p>
               </div>
-              <div className="relative flex justify-center">
-                <div className="bg-white px-3 py-1 rounded-full">
-                  <Plane size={20} className="text-indigo-500" />
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Flight Number</p>
+                <p className="font-bold text-gray-800">{flight.fullFlightNumber}</p>
+              </div>
+            </div>
+
+            {/* Route */}
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+              <div className="flex-1 text-center md:text-left">
+                <p className="text-2xl font-bold text-gray-800">{flight.departure.iata}</p>
+                <p className="text-sm text-gray-600 mt-1">{flight.departure.airport}</p>
+                <p className="text-xs text-gray-500">{flight.departure.city}, {flight.departure.country}</p>
+                <div className="mt-2">
+                  <p className="font-semibold text-gray-800">{formatTime(flight.departure.time)}</p>
+                  <p className="text-xs text-gray-500">{formatDate(flight.departure.date)}</p>
+                  {flight.departure.terminal && (
+                    <p className="text-xs text-gray-500 mt-1">Terminal: {flight.departure.terminal}</p>
+                  )}
+                  {flight.departure.gate && (
+                    <p className="text-xs text-gray-500">Gate: {flight.departure.gate}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <Plane size={24} className="text-indigo-600 rotate-90 md:rotate-0" />
+                <div className="text-xs text-gray-500 mt-2">{flight.duration}</div>
+                {flight.stops > 0 && (
+                  <div className="text-xs text-gray-500">{flight.stops} stop(s)</div>
+                )}
+              </div>
+
+              <div className="flex-1 text-center md:text-right">
+                <p className="text-2xl font-bold text-gray-800">{flight.arrival.iata}</p>
+                <p className="text-sm text-gray-600 mt-1">{flight.arrival.airport}</p>
+                <p className="text-xs text-gray-500">{flight.arrival.city}, {flight.arrival.country}</p>
+                <div className="mt-2">
+                  <p className="font-semibold text-gray-800">{formatTime(flight.arrival.time)}</p>
+                  <p className="text-xs text-gray-500">{formatDate(flight.arrival.date)}</p>
                 </div>
               </div>
             </div>
-            {trackingResult.duration && (
-              <p className="text-center text-sm text-gray-500 mt-2">Duration: {trackingResult.duration}</p>
-            )}
-          </div>
-          
-          <div className="text-center flex-1">
-            <p className="text-3xl font-bold text-gray-800">{arrivalTime}</p>
-            <p className="text-lg font-semibold text-gray-600 mt-1">{trackingResult.arrival?.iata}</p>
-            <p className="text-sm text-gray-500 mt-1">{arrivalDate}</p>
-            <p className="text-sm text-gray-400 mt-1">{trackingResult.arrival?.airport}</p>
-          </div>
-        </div>
 
-        {/* Additional Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gray-50 rounded-xl p-5">
-            <h3 className="font-semibold text-gray-800 mb-3">Flight Information</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-500">Flight Date</span>
-                <span className="font-semibold text-gray-800">{formattedDate}</span>
+            {/* Additional Info */}
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+              <div>
+                <p className="text-xs text-gray-500">Cabin Class</p>
+                <p className="font-medium text-gray-800">{flight.cabinClass}</p>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-500">Airline</span>
-                <span className="font-semibold text-gray-800">{trackingResult.airline?.name}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-500">Flight Number</span>
-                <span className="font-semibold text-gray-800">{trackingResult.flight?.iata}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-50 rounded-xl p-5">
-            <h3 className="font-semibold text-gray-800 mb-3">Terminal & Gate</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-500">Departure Terminal</span>
-                <span className="font-semibold text-gray-800">{trackingResult.departure?.terminal || 'TBD'}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-500">Departure Gate</span>
-                <span className="font-semibold text-gray-800">{trackingResult.departure?.gate || 'TBD'}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-500">Arrival Terminal</span>
-                <span className="font-semibold text-gray-800">{trackingResult.arrival?.terminal || 'TBD'}</span>
+              <div>
+                <p className="text-xs text-gray-500">Flight Type</p>
+                <p className="font-medium text-gray-800 capitalize">{flight.flightType.replace('_', ' ')}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4">
-          <button
-            onClick={onReset}
-            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl hover:bg-gray-200 transition font-semibold cursor-pointer"
-          >
-            Track Another Flight
-          </button>
-          <a
-            href="/"
-            className="flex-1 bg-gradient-to-r from-indigo-800 to-indigo-800 text-white py-3 rounded-xl hover:shadow-lg transition font-semibold text-center cursor-pointer"
-          >
-            Back to Home
-          </a>
+        {/* Return Flight Information (if round trip) */}
+        {returnFlight && returnFlight.flightNumber && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <RotateCcw size={20} className="text-indigo-600" />
+              <h3 className="font-bold text-gray-800">Return Flight Information</h3>
+            </div>
+            
+            <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200">
+              {/* Airline and Flight Number */}
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
+                <div>
+                  <p className="text-sm text-gray-500">Airline</p>
+                  <p className="font-bold text-gray-800">{returnFlight.airline.name} ({returnFlight.airline.iata})</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Flight Number</p>
+                  <p className="font-bold text-gray-800">{returnFlight.fullFlightNumber}</p>
+                </div>
+              </div>
+
+              {/* Route */}
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex-1 text-center md:text-left">
+                  <p className="text-2xl font-bold text-gray-800">{returnFlight.departure.iata}</p>
+                  <p className="text-sm text-gray-600 mt-1">{returnFlight.departure.airport}</p>
+                  <div className="mt-2">
+                    <p className="font-semibold text-gray-800">{formatTime(returnFlight.departure.time)}</p>
+                    <p className="text-xs text-gray-500">{formatDate(returnFlight.departure.date)}</p>
+                    {returnFlight.departure.terminal && (
+                      <p className="text-xs text-gray-500 mt-1">Terminal: {returnFlight.departure.terminal}</p>
+                    )}
+                    {returnFlight.departure.gate && (
+                      <p className="text-xs text-gray-500">Gate: {returnFlight.departure.gate}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col items-center">
+                  <ArrowRight size={24} className="text-indigo-600" />
+                  <div className="text-xs text-gray-500 mt-2">{returnFlight.duration}</div>
+                  {returnFlight.stops > 0 && (
+                    <div className="text-xs text-gray-500">{returnFlight.stops} stop(s)</div>
+                  )}
+                </div>
+
+                <div className="flex-1 text-center md:text-right">
+                  <p className="text-2xl font-bold text-gray-800">{returnFlight.arrival.iata}</p>
+                  <p className="text-sm text-gray-600 mt-1">{returnFlight.arrival.airport}</p>
+                  <div className="mt-2">
+                    <p className="font-semibold text-gray-800">{formatTime(returnFlight.arrival.time)}</p>
+                    <p className="text-xs text-gray-500">{formatDate(returnFlight.arrival.date)}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Booking Details */}
+        <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-200">
+          <div className="flex items-center gap-2 mb-3">
+            <Ticket size={18} className="text-indigo-600" />
+            <h4 className="font-semibold text-gray-800">Booking Details</h4>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-gray-500">Booking Reference</p>
+              <p className="font-mono font-bold text-gray-800">{booking.reference}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Transaction ID</p>
+              <p className="font-mono text-sm text-gray-800">{transactionId}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Amount Paid</p>
+              <p className="font-bold text-gray-800">${booking.amount.
+                  toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Booking Date</p>
+              <p className="text-sm text-gray-800">{formatDate(booking.bookingDate)}</p>
+            </div>
+          </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.4s ease-out;
-        }
-      `}</style>
     </div>
   );
 }

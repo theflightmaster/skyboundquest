@@ -204,7 +204,9 @@ export async function sendTicketEmail({
                 </div>
                 <div class="info-row">
                   <span class="info-label">Amount Paid: </span>
-                  <span class="info-value">$${amount}</span>
+                  <span class="info-value">$${amount.
+                    toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
                 </div>
               </div>
 

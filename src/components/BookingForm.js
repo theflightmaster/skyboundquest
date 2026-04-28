@@ -112,7 +112,7 @@ export default function BookingForm({ flight, flightData, keyDetails }) {
   const totalAmount = flight?.price?.amount || 
                       flight?.total_price?.amount || 
                       keyDetails?.price || 
-                      299;
+                      599;
 
   // Construct complete flight data for email
   const completeFlightData = {
@@ -143,7 +143,6 @@ export default function BookingForm({ flight, flightData, keyDetails }) {
     cabin_class: flight?.cabin_class || primaryFlight?.cabin_class || 'Economy',
     price: {
       amount: totalAmount,
-      currency: 'USD',
     },
     type: flight?.type || 'one_way',
   };
@@ -153,6 +152,7 @@ export default function BookingForm({ flight, flightData, keyDetails }) {
     flightNumber: flightNumber,
     airline: airlineName,
     airlineCode: flight?.airlineCode,
+    price: totalAmount,
     departureAirport: departureAirport,
     arrivalAirport: arrivalAirport,
     departureTime: departureTime,
@@ -162,7 +162,6 @@ export default function BookingForm({ flight, flightData, keyDetails }) {
     terminal: terminal,
     gate: gate,
     cabinClass: completeFlightData.cabin_class,
-    price: totalAmount,
     departureAirportFull: primaryFlight?.departure?.airport || '',
     arrivalAirportFull: primaryFlight?.arrival?.airport || '',
   };
@@ -305,7 +304,7 @@ export default function BookingForm({ flight, flightData, keyDetails }) {
           </div>
 
           <PaymentButton
-            amount={totalAmount}
+            amount={totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             email={formData.email}
             passengerData={formData}
             flightData={completeFlightData}

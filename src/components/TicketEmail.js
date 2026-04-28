@@ -67,7 +67,7 @@ export async function TicketEmail({
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Your Flight Ticket Confirmation - ${flightNumber}</title>
+          <title>Your Flight Ticket Confirmation - ${reference}</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif;
@@ -270,15 +270,15 @@ export async function TicketEmail({
               
               <div class="card">
                 <div class="info-row">
-                  <span class="info-label">Booking Reference:</span>
+                  <span class="info-label">Booking Reference: </span>
                   <span class="info-value">${bookingReference}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Flight Number:</span>
+                  <span class="info-label">Flight Number: </span>
                   <span class="info-value">${flightNumber}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">Airline:</span>
+                  <span class="info-label">Airline: </span>
                   <span class="info-value">${airline}</span>
                 </div>
               </div>
@@ -301,17 +301,9 @@ export async function TicketEmail({
                 </div>
                 <hr style="margin: 15px 0;" />
                 <div class="info-row">
-                  <span class="info-label">Duration</span>
+                  <span class="info-label">Duration: </span>
                   <span class="info-value">${duration}</span>
                 </div>
-                // <div class="info-row">
-                //   <span class="info-label">Terminal</span>
-                //   <span class="info-value">${terminal}</span>
-                // </div>
-                // <div class="info-row">
-                //   <span class="info-label">Gate</span>
-                //   <span class="info-value">${gate}</span>
-                // </div>
               </div>
               
               <hr />

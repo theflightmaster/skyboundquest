@@ -23,10 +23,6 @@ const BookingSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  currency: {
-    type: String,
-    default: 'USD',
-  },
   paidAt: {
     type: Date,
     required: true,

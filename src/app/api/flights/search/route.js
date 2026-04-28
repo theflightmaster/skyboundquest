@@ -29,7 +29,6 @@ export async function GET(request) {
       children: parseInt(children),
       infants: parseInt(infants),
       cabin_class: cabinClass,
-      currency: 'USD',
     });
 
     return NextResponse.json({ 
