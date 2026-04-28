@@ -339,7 +339,7 @@ export async function TicketEmail({
     const { data, error } = await resend.emails.send({
       from: 'Skyboundquest <noreply@skyboundquest.com>',
       to: [to],
-      subject: `Your Flight Ticket Confirmation - ${flightNumber}`,
+      subject: `Your Flight Ticket Confirmation - ${bookingReference}`,
       html: emailHtml, // Use HTML instead of React component
       attachments: [
         {
