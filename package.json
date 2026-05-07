@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "update-airports": "node scripts/fetch-airports.js"
   },
   "dependencies": {
     "@paystack/inline-js": "^2.22.8",
@@ -14,6 +15,7 @@
     "@react-pdf/renderer": "^4.5.1",
     "axios": "^1.15.0",
     "crypto": "^1.0.1",
+    "csvtojson": "^2.0.14",
     "date-fns": "^4.1.0",
     "lucide-react": "^1.8.0",
     "mongoose": "^9.5.0",

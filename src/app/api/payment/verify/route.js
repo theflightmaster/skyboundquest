@@ -163,7 +163,7 @@ export async function GET(request) {
     try {
       const booking = new Booking(bookingData);
       await booking.save();
-      console.log('Booking saved successfully:', booking.bookingReference);
+      // console.log('Booking saved successfully:', booking.bookingReference);
     } catch (dbError) {
       console.error('Error saving booking to database:', dbError);
       // Continue with the flow even if DB save fails - we don't want to block the user
